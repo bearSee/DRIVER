@@ -1,0 +1,9 @@
+// @import "./theme.scss";
+// @import "~sibionics-ui/packages/theme-chalk/src/index";
+.el-textarea .el-input__count {
+    bottom: -25px;
+    right: 0;
+}
+.el-dialog__header .el-dialog__title {
+  max-width: calc(100% - 30px);
+}
