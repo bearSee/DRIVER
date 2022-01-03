@@ -8,17 +8,17 @@
       stripe
       v-loading="isLoading"
       :row-size="4"
+      :page-param-keys="pageParamKeys"
       :search-info="searchInfo"
       :table-column="tableColumn"
-      :table-data="tableData"
       :request-config="requestConfig">
       <template #search-operate>
-        <el-button
+        <!-- <el-button
           type="primary"
           icon="el-icon-plus"
           @click.native="handlerAdd">
           新增
-        </el-button>
+        </el-button> -->
         <el-button
           type="primary"
           icon="el-icon-s-tools"
@@ -33,11 +33,11 @@
           配置
         </el-button>
       </template>
-      <template #explain="{ row }">
+      <template #activityDesc="{ row }">
         <el-button
           type="text"
           @click.native="handlerViewExplain(row)">
-          {{ row.explain }}
+          {{ row.activityDesc || '-' }}
         </el-button>
       </template>
       <template #operate="{ row }">
@@ -48,8 +48,8 @@
         </el-button>
         <el-button
           type="text"
-          @click.native="handlerEnable([row], String(row.status) === '1' ? 'N' : 'Y')">
-          {{ String(row.status) === '1' ? '失效' : '生效' }}
+          @click.native="handlerEnable(row, String(row.enabled) === 'Y' ? 'N' : 'Y')">
+          {{ String(row.enabled) === 'Y' ? '失效' : '生效' }}
         </el-button>
       </template>
     </sib-table>
@@ -96,7 +96,7 @@
     <!-- 发放机制 弹窗 -->
     <el-dialog
       class="config-dialog center"
-      width="1100px"
+      width="850px"
       title="发放机制"
       append-to-body
       lock-scroll
@@ -112,7 +112,7 @@
         @submit="handlerSubmitConfig"
         @reset="configVisible = false">
         <template
-          v-for="code in ['_code1', '_code2']"
+          v-for="code in ['continuity', 'additional']"
           #[code]>
           <sib-table
             size="mini"
@@ -122,6 +122,7 @@
             :key="code"
             :page-sizes="[5, 10]"
             :page-size="5"
+            :is-pagination="!!configTableDatas[code].length"
             :table-column="configTableColumn"
             :table-data="configTableDatas[code]">
             <template #content-body>
@@ -138,15 +139,15 @@
                 v-model="row.days"
                 :props="configDaysProps" />
             </template>
-            <template #points="{ row }">
+            <template #score="{ row }">
               <sib-item
-                v-model="row.points"
+                v-model="row.score"
                 :props="configPointsProps" />
             </template>
+            <!-- :disabled="configTableDatas[code].length < 2" -->
             <template #operate="{ realIndex }">
               <el-button
                 type="text"
-                :disabled="configTableDatas[code].length < 2"
                 @click.native="handlerDelete(realIndex, code)">
                 删除
               </el-button>
@@ -166,7 +167,7 @@
       :visible.sync="explainVisible"
       :close-on-click-modal="false"
       :close-on-press-escape="false">
-      活动说明
+      {{ currentRow.activityDesc }}
     </el-dialog>
   </div>
 </template>
@@ -178,17 +179,21 @@ export default {
     data() {
         return {
             isLoading: false,
+            pageParamKeys: {
+                pageIndex: 'page',
+                pageSize: 'limit',
+            },
             searchInfo: [
                 {
                     label: '活动名称',
-                    code: '3',
+                    code: 'activityName',
                     type: 'text',
                 },
             ],
             tableColumn: [
                 {
                     label: '活动类型',
-                    code: '1',
+                    code: 'activityName',
                 },
                 {
                     label: '发放机制',
@@ -197,16 +202,18 @@ export default {
                 },
                 {
                     label: '活动说明',
-                    code: 'explain',
+                    code: 'activityDesc',
                     type: 'slot',
+                    showOverflowTooltip: true,
                 },
                 {
                     label: '备注',
-                    code: '2',
+                    code: 'remark',
                 },
                 {
                     label: '状态',
-                    code: '3',
+                    code: 'enabled',
+                    formatter: ({ enabled }) => ({ Y: '生效', N: '失效' })[enabled],
                 },
                 {
                     label: '操作',
@@ -214,51 +221,28 @@ export default {
                     type: 'slot',
                 },
             ],
-            tableData: Array(22).fill().map((_, i) => ({
-                id: i,
-                1: `test${i}`,
-                2: `test${i}`,
-                3: `test${i}`,
-                4: `test${i}`,
-                5: `test${i}`,
-                6: `test${i}`,
-                config: `test${i}`,
-                explain: `test${i}`,
-                message: 'test',
-            })),
             requestConfig: {
-                // url: '/edc-profile-service/organization/findPage',
-                // method: 'post',
-                // params: {},
-                // callback: res => res.data,
+                url: '/activity/list',
+                method: 'post',
+                params: {},
+                callback: res => (res.data || {}).data || [],
+                stringify: true,
             },
             dialogConfig: {
                 title: '',
-                type: 'add',
+                type: 'save',
                 visible: false,
                 itemInfo: [],
                 addItemInfo: [
                     {
-                        label: '活动类型',
-                        code: '1',
-                        type: 'select',
-                        options: [],
-                    },
-                    {
                         label: '活动说明',
-                        code: 'explain',
+                        code: 'activityDesc',
                         type: 'textarea',
                     },
                     {
                         label: '备注',
-                        code: '2',
+                        code: 'remark',
                         type: 'textarea',
-                    },
-                    {
-                        label: '状态',
-                        code: '3',
-                        type: 'select',
-                        options: [],
                     },
                 ],
                 editItemInfo: [],
@@ -290,49 +274,57 @@ export default {
             configItemInfo: [
                 {
                     label: '默认奖励',
-                    code: 'a',
-                    type: 'text',
-                    valueType: 'number',
+                    code: 'score',
+                    type: 'number',
                     unit: '积分',
-                    width: '40%',
+                    width: '45%',
                     required: true,
+                    min: 0,
+                    precision: 0,
+                    controls: false,
                 },
                 {
                     label: '连续签到',
-                    code: '_code1',
+                    code: 'continuity',
                     type: 'slot',
                 },
                 {
                     label: '额外奖励',
-                    code: '_code2',
+                    code: 'additional',
                     type: 'slot',
                 },
                 {
                     label: '连续签到',
                     placeholder: '请输入',
-                    code: 'm',
-                    type: 'text',
-                    valueType: 'number',
+                    code: 'days',
+                    type: 'number',
                     unit: '天',
-                    width: '30%',
+                    width: 'calc(33% - 10px)',
+                    min: 0,
+                    precision: 0,
+                    controls: false,
                 },
                 {
                     label: '后， 每连续签到',
                     placeholder: '请输入',
-                    code: 'n',
-                    type: 'text',
-                    valueType: 'number',
+                    code: 'over',
+                    type: 'number',
                     unit: '天',
-                    width: '30%',
+                    width: 'calc(33% - 10px)',
+                    min: 0,
+                    precision: 0,
+                    controls: false,
                 },
                 {
                     label: '将额外奖励 ',
                     placeholder: '请输入',
-                    code: 'o',
-                    type: 'text',
-                    valueType: 'number',
+                    code: 'continuityScore',
+                    type: 'number',
                     unit: '积分',
-                    width: '30%',
+                    width: 'calc(33% - 10px)',
+                    min: 0,
+                    precision: 0,
+                    controls: false,
                 },
             ],
             configForm: {},
@@ -344,7 +336,7 @@ export default {
                 },
                 {
                     label: '奖励积分数量',
-                    code: 'points',
+                    code: 'score',
                     type: 'slot',
                 },
                 {
@@ -355,37 +347,37 @@ export default {
                 },
             ],
             configTableDatas: {
-                _code1: [{}],
-                _code2: [{}],
+                continuity: [],
+                additional: [],
             },
             configDaysProps: {
-                type: 'text',
-                valueType: 'number',
+                type: 'number',
                 unit: '天',
+                min: 0,
+                precision: 0,
+                controls: false,
             },
             configPointsProps: {
-                type: 'text',
-                valueType: 'number',
+                type: 'number',
                 unit: '积分',
+                min: 0,
+                precision: 0,
+                controls: false,
             },
             explainVisible: false,
+            currentRow: {},
         };
     },
     methods: {
         getSetting() {
-            this.$http.post('url').then((res) => {
-                this.settingForm = res && res.data && res.data.data || {};
-            });
+            // this.$http.post('url').then((res) => {
+            //     this.settingForm = res && res.data && res.data.data || {};
+            // });
         },
         // 启用/禁用
-        handlerEnable(rows, enable) {
-            if (!rows.length) {
-                this.$message.warning('请至少勾选一条数据');
-                return;
-            }
+        handlerEnable(row, enabled) {
             this.isLoading = true;
-            const type = enable === 'Y' ? 'batchEnable' : 'batchDisable';
-            this.$http.post(`/edc-user-service/user/${type}`, { ids: rows.map(({ id }) => id) }).then(() => {
+            this.$http.post('/activity/enable', { ...row, enabled }).then(() => {
                 this.$message.success('操作成功');
                 if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
             }).finally(() => {
@@ -395,7 +387,7 @@ export default {
         // 打开新增弹窗
         handlerAdd() {
             this.dialogConfig.title = '新增';
-            this.dialogConfig.type = 'add';
+            this.dialogConfig.type = 'save';
             this.dialogConfig.itemInfo = this.dialogConfig.addItemInfo;
             this.dialogConfig.form = {};
             this.dialogConfig.visible = true;
@@ -412,7 +404,7 @@ export default {
         // 创建、编辑用户提交
         handlerSubmit(form, cb) {
             const { type } = this.dialogConfig;
-            const url = `/edc-profile-service/organization/${type}`;
+            const url = `/activity/${type}`;
 
             this.$http.post(url, form).then(() => {
                 this.$message.success('保存成功');
@@ -421,11 +413,20 @@ export default {
             }).finally(cb);
         },
         handlerConfig(row) {
+            this.currentRow = row;
+            const activityConfig = JSON.parse(row.activityCfg || '{}');
+            const cumulative = activityConfig.cumulative || {};
+            this.configForm = {
+                ...activityConfig,
+                days: cumulative.days || '',
+                over: cumulative.over || '',
+                continuityScore: cumulative.score || '',
+            };
+            this.configTableDatas = {
+                additional: activityConfig.additional || [],
+                continuity: activityConfig.continuity || [],
+            };
             this.configVisible = true;
-            this.$http.post('url', { id: row.id }).then((res) => {
-                this.configForm = res && res.data && res.data.data || {};
-                this.configVisible = true;
-            });
         },
         handlerSubmitSetting(form, cb) {
             this.$http.post('url', form).then(() => {
@@ -440,13 +441,18 @@ export default {
             this.configTableDatas[code].splice(index, 1);
         },
         handlerSubmitConfig(form, cb) {
-            this.$http.post('url', form).then(() => {
+            console.log('form', form);
+            this.$http.post('/activity/config', {
+                activityId: this.currentRow.id,
+                activityCfg: JSON.stringify(form),
+            }).then(() => {
                 this.$message.success('保存成功');
-                this.settingVisible = false;
+                this.configVisible = false;
             }).finally(cb);
         },
         handlerViewExplain(row) {
-            console.log('row', row);
+            if (!row.activityDesc) return;
+            this.currentRow = row;
             this.explainVisible = true;
         },
     },

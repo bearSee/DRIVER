@@ -7,17 +7,17 @@
       border
       stripe
       :row-size="4"
+      :page-param-keys="pageParamKeys"
       :search-info="searchInfo"
       :table-column="tableColumn"
-      :table-data="tableData"
       :request-config="requestConfig">
       <template #content-body>
-        <el-button
+        <!-- <el-button
           type="primary"
           icon="el-icon-plus"
           @click.native="handlerAdd">
           新增
-        </el-button>
+        </el-button> -->
         <el-button
           type="primary"
           @click.native="handlerExport">
@@ -28,7 +28,7 @@
         <el-button
           type="text"
           @click.native="handlerPointDetail(row)">
-          {{ row.integral }}
+          {{ row.score }}
         </el-button>
       </template>
       <template #operate="{ row }">
@@ -52,7 +52,7 @@
     <!-- 新增、修改弹窗 -->
     <el-dialog
       class="center"
-      width="500px"
+      width="800px"
       append-to-body
       lock-scroll
       v-dialogDrag
@@ -64,6 +64,7 @@
       <sib-form
         submit-text="保存"
         cancel-text="取消"
+        :row-size="2"
         :item-info="dialogConfig.itemInfo"
         :form="dialogConfig.form"
         @submit="handlerSubmit"
@@ -99,13 +100,32 @@
           积分管理
         </div>
         <sib-form
+          ref="dialogForm"
           submit-text="保存"
           cancel-text="取消"
           :item-info="pointItemInfo"
+          @form-item-change="formItemChange"
           @submit="handlerSubmitPoint"
           @reset="pointVisible = false"
         />
       </div>
+    </el-dialog>
+    <el-dialog
+      class="center"
+      width="800px"
+      title="积分详情"
+      append-to-body
+      lock-scroll
+      v-dialogDrag
+      v-if="detailVisible"
+      :visible.sync="detailVisible"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false">
+      <sib-table
+        stripe
+        :page-param-keys="pageParamKeys"
+        :table-column="detailTableColumn"
+        :request-config="detailRequestConfig" />
     </el-dialog>
   </div>
 </template>
@@ -116,48 +136,62 @@ export default {
     name: 'VipManage',
     data() {
         return {
+            pageParamKeys: {
+                pageIndex: 'page',
+                pageSize: 'limit',
+            },
             searchInfo: [
                 {
                     label: '人员类型',
-                    code: '1',
+                    code: 'userType',
                     type: 'select',
                     options: [],
+                    optionProps: {
+                        key: 'dicKey',
+                        value: 'dicValue',
+                    },
+                    requestConfig: {
+                        url: '/dict/select/list/USER_TYPE',
+                        method: 'get',
+                        params: {},
+                        callback: res => (res.data || {}).list || [],
+                    },
                 },
                 {
                     label: '公司/平台',
-                    code: '2',
+                    code: 'company',
                     type: 'text',
                 },
                 {
                     label: '车牌号码',
-                    code: '3',
+                    code: 'vehicleNo',
                     type: 'text',
                 },
             ],
             tableColumn: [
                 {
                     label: '人员类型',
-                    code: '1',
+                    code: 'userTypeName',
                 },
                 {
                     label: '真实姓名',
-                    code: '2',
+                    code: 'userName',
                 },
                 {
                     label: '手机号码',
-                    code: '3',
+                    code: 'mobile',
                 },
                 {
                     label: '身份证号码',
-                    code: '4',
+                    code: 'identityNo',
                 },
                 {
                     label: '公司/平台',
-                    code: '5',
+                    code: 'company',
                 },
                 {
                     label: '车牌号码',
-                    code: '6',
+                    code: 'vehicleNo',
                 },
                 {
                     label: '积分',
@@ -166,7 +200,7 @@ export default {
                 },
                 {
                     label: '对应标签',
-                    code: '8',
+                    code: 'label',
                 },
                 {
                     label: '操作',
@@ -175,67 +209,87 @@ export default {
                     width: 150,
                 },
             ],
-            tableData: Array(22).fill().map((_, i) => ({
-                id: i,
-                1: `test${i}`,
-                2: `test${i}`,
-                3: `test${i}`,
-                4: `test${i}`,
-                5: `test${i}`,
-                6: `test${i}`,
-                integral: 'test',
-            })),
             requestConfig: {
-                // url: '/edc-profile-service/organization/findPage',
-                // method: 'post',
-                // params: {},
-                // callback: res => res.data,
+                url: '/user/queryPage',
+                method: 'post',
+                params: {},
+                callback: res => ((res.data || {}).page || {}).list || [],
+                stringify: true,
             },
             dialogConfig: {
                 title: '',
-                type: 'add',
+                type: 'save',
                 visible: false,
                 itemInfo: [],
                 addItemInfo: [
                     {
-                        label: '人员类型',
-                        code: '1',
+                        label: '会员名称',
+                        code: 'userName',
                         type: 'text',
+                        maxlength: 30,
+                        required: true,
                     },
-                    {
-                        label: '真实姓名',
-                        code: '2',
-                        type: 'text',
-                    },
-                    {
-                        label: '手机号码',
-                        code: '3',
-                        type: 'text',
-                    },
+                    // {
+                    //     label: '人员类型',
+                    //     code: 'userType',
+                    //     type: 'select',
+                    //     options: [],
+                    //     optionProps: {
+                    //         key: 'dicKey',
+                    //         value: 'dicValue',
+                    //     },
+                    //     requestConfig: {
+                    //         url: '/dict/select/list/USER_TYPE',
+                    //         method: 'get',
+                    //         params: {},
+                    //         callback: res => (res.data || {}).list || [],
+                    //     },
+                    //     required: true,
+                    // },
+                    // {
+                    //     label: '手机号码',
+                    //     code: 'mobile',
+                    //     type: 'text',
+                    //     valueType: 'number',
+                    //     required: true,
+                    // },
                     {
                         label: '身份证号码',
-                        code: '4',
+                        code: 'identityNo',
                         type: 'text',
-                    },
-                    {
-                        label: '公司/平台',
-                        code: '5',
-                        type: 'text',
+                        required: true,
                     },
                     {
                         label: '车牌号码',
-                        code: '6',
+                        code: 'vehicleNo',
                         type: 'text',
+                        required: true,
                     },
                     {
                         label: '积分',
-                        code: '7',
+                        code: 'score',
                         type: 'text',
+                        valueType: 'number',
+                        required: true,
+                    },
+                    {
+                        label: '公司/平台',
+                        code: 'company',
+                        type: 'text',
+                        required: true,
+                    },
+                    {
+                        label: '邀请码',
+                        code: 'invitationCode',
+                        type: 'text',
+                        valueType: 'letter-number',
+                        required: true,
                     },
                     {
                         label: '对应标签',
-                        code: '8',
+                        code: 'label',
                         type: 'text',
+                        required: true,
                     },
                 ],
                 editItemInfo: [],
@@ -245,42 +299,42 @@ export default {
             baseItemInfo: [
                 {
                     label: '人员类型',
-                    code: '1',
+                    code: 'userTypeName',
                     type: 'label',
                 },
                 {
                     label: '真实姓名',
-                    code: '2',
+                    code: 'userName',
                     type: 'label',
                 },
                 {
                     label: '手机号码',
-                    code: '3',
+                    code: 'mobile',
                     type: 'label',
                 },
                 {
                     label: '身份证号码',
-                    code: '4',
+                    code: 'identityNo',
                     type: 'label',
                 },
                 {
                     label: '公司/平台',
-                    code: '5',
+                    code: 'company',
                     type: 'label',
                 },
                 {
                     label: '车牌号码',
-                    code: '6',
+                    code: 'vehicleNo',
                     type: 'label',
                 },
                 {
                     label: '积分',
-                    code: 'integral',
+                    code: 'score',
                     type: 'label',
                 },
                 {
                     label: '对应标签',
-                    code: '8',
+                    code: 'label',
                     type: 'label',
                 },
             ],
@@ -288,19 +342,19 @@ export default {
             pointItemInfo: [
                 {
                     label: '变动类型',
-                    code: '1',
+                    code: 'sourceType',
                     type: 'radio',
                     options: [
                         {
-                            key: '1',
+                            key: 'SCORE_SOURCE_ADD',
                             value: '发放积分',
                         },
                         {
-                            key: '2',
+                            key: 'SCORE_SOURCE_CLEAR',
                             value: '清零积分',
                         },
                         {
-                            key: '3',
+                            key: 'SCORE_SOURCE_DELETE',
                             value: '删除积分',
                         },
                     ],
@@ -308,7 +362,7 @@ export default {
                 },
                 {
                     label: '变动数量',
-                    code: '2',
+                    code: 'score',
                     type: 'text',
                     valueType: 'number',
                     maxlength: 10,
@@ -316,39 +370,57 @@ export default {
                 },
                 {
                     label: '变动后',
-                    code: '3',
+                    code: 'newScore',
                     type: 'label',
                     width: 'calc(50% - 10px)',
                 },
-                {
-                    label: '系统消息',
-                    code: '4',
-                    type: 'textarea',
-                },
+                // {
+                //     label: '系统消息',
+                //     code: '4',
+                //     type: 'textarea',
+                // },
                 {
                     label: '变动原因',
-                    code: '5',
+                    code: 'reason',
                     type: 'textarea',
                 },
             ],
+            detailVisible: false,
+            detailTableColumn: [
+                {
+                    label: '变动类型',
+                    code: 'sourceTypeName',
+                },
+                {
+                    label: '变动原因',
+                    code: 'reason',
+                },
+                {
+                    label: '变动时间',
+                    code: 'updatedDt',
+                },
+                {
+                    label: '变动数量',
+                    code: 'score',
+                },
+            ],
+            detailRequestConfig: {
+                url: '/user/score/detail',
+                method: 'post',
+                params: {},
+                callback: res => ((res.data || {}).page || {}).list || [],
+                stringify: true,
+            },
         };
     },
     methods: {
         // 删除
         handlerDelete(row) {
-            this.handlerBatchDelete([row]);
-        },
-        // 批量删除
-        handlerBatchDelete(rows) {
-            if (!rows.length) {
-                this.$message.warning('请至少勾选一条数据');
-                return;
-            }
             this.$confirm('确定删除吗？', '温馨提示', {
                 type: 'warning',
                 confirmButtonText: '确定删除',
             }).then(() => {
-                this.$http.post('/edc-profile-service/organization/remove', { ids: rows.map(({ id }) => id) }).then(() => {
+                this.$http.post('/user/delete', this.$qs.stringify({ userId: row.id })).then(() => {
                     this.$message.success('删除成功');
                     if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
                 });
@@ -357,7 +429,7 @@ export default {
         // 打开新增弹窗
         handlerAdd() {
             this.dialogConfig.title = '新增';
-            this.dialogConfig.type = 'add';
+            this.dialogConfig.type = 'save';
             this.dialogConfig.itemInfo = this.dialogConfig.addItemInfo;
             this.dialogConfig.form = {};
             this.dialogConfig.visible = true;
@@ -374,7 +446,7 @@ export default {
         // 创建、编辑用户提交
         handlerSubmit(form, cb) {
             const { type } = this.dialogConfig;
-            const url = `/edc-profile-service/organization/${type}`;
+            const url = `/user/${type}`;
 
             this.$http.post(url, form).then(() => {
                 this.$message.success('保存成功');
@@ -386,11 +458,39 @@ export default {
             this.baseForm = row;
             this.pointVisible = true;
         },
+        formItemChange(val, { code }) {
+            const form = (this.$refs.dialogForm || {}).currentForm;
+            let newScore = Number(this.baseForm.score) || 0;
+            if (code === 'sourceType') {
+                this.$set(form, 'score', '');
+                this.$set(form, 'newScore', val === 'SCORE_SOURCE_CLEAR' ? 0 : newScore);
+                const index = this.pointItemInfo.findIndex(info => info.code === 'score');
+                this.$set(this.pointItemInfo[index], 'disabled', val === 'SCORE_SOURCE_CLEAR');
+            }
+            if (code === 'score') {
+                if (!form.sourceType) return;
+                if (form.sourceType === 'SCORE_SOURCE_DELETE') {
+                    if (Number(val) > newScore) {
+                        this.$set(form, 'score', newScore);
+                        newScore = 0;
+                    } else {
+                        newScore -= (Number(val) || 0);
+                    }
+                } else if (form.sourceType === 'SCORE_SOURCE_CLEAR') {
+                    newScore = 0;
+                } else {
+                    newScore += (Number(val) || 0);
+                }
+                this.$set(form, 'newScore', newScore);
+            }
+        },
         handlerPointDetail(row) {
-            console.log('row', row);
+            this.detailRequestConfig.params.userId = row.id;
+            this.detailVisible = true;
         },
         handlerSubmitPoint(form, cb) {
-            this.$http.post('', form).then(() => {
+            form.score = form.score || 0;
+            this.$http.post('/user/score/change', { userId: this.baseForm.id, ...form }).then(() => {
                 this.$message.success('保存成功');
                 this.pointVisible = false;
                 if (this.$refs.sibTable) this.$refs.sibTable.getTableData();

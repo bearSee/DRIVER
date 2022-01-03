@@ -7,9 +7,9 @@
       border
       stripe
       :row-size="4"
+      :page-param-keys="pageParamKeys"
       :search-info="searchInfo"
       :table-column="tableColumn"
-      :table-data="tableData"
       :request-config="requestConfig">
       <template #content-body>
         <el-button
@@ -28,7 +28,7 @@
         <el-button
           type="text"
           @click.native="handlerViewMessage(row)">
-          {{ row.message }}
+          {{ row.content }}
         </el-button>
       </template>
       <template #operate="{ row }">
@@ -78,7 +78,7 @@
       :close-on-click-modal="false"
       :close-on-press-escape="false">
       <div class="message-info">
-        message
+        {{ currentRow.content }}
       </div>
     </el-dialog>
   </div>
@@ -90,52 +90,67 @@ export default {
     name: 'MessageManage',
     data() {
         return {
+            pageParamKeys: {
+                pageIndex: 'page',
+                pageSize: 'limit',
+            },
             searchInfo: [
                 {
                     label: '状态',
-                    code: '1',
+                    code: 'status',
                     type: 'select',
                     options: [],
+                    optionProps: {
+                        key: 'dicKey',
+                        value: 'dicValue',
+                    },
+                    requestConfig: {
+                        url: '/dict/select/list/MSG_STATUS',
+                        method: 'get',
+                        params: {},
+                        callback: res => (res.data || {}).list || [],
+                    },
                 },
                 {
                     label: '消息标题',
-                    code: '3',
+                    code: 'title',
                     type: 'text',
                 },
             ],
             tableColumn: [
                 {
                     label: '消息标题',
-                    code: '1',
+                    code: 'title',
                 },
                 {
                     label: '消息类别',
-                    code: '2',
+                    code: 'msgTypeName',
                 },
                 {
                     label: '发送范围',
-                    code: '3',
+                    code: 'sendRangeName',
                 },
                 {
                     label: '消息内容',
                     code: 'message',
                     type: 'slot',
+                    showOverflowTooltip: true,
                 },
                 {
                     label: '发送时间',
-                    code: '5',
+                    code: 'sendDt',
                 },
                 {
                     label: '创建人',
-                    code: '6',
+                    code: 'sendUsers',
                 },
                 {
                     label: '创建时间',
-                    code: '7',
+                    code: 'createdDt',
                 },
                 {
                     label: '状态',
-                    code: '8',
+                    code: 'statusName',
                 },
                 {
                     label: '操作',
@@ -143,81 +158,100 @@ export default {
                     type: 'slot',
                 },
             ],
-            tableData: Array(22).fill().map((_, i) => ({
-                id: i,
-                1: `test${i}`,
-                2: `test${i}`,
-                3: `test${i}`,
-                4: `test${i}`,
-                5: `test${i}`,
-                6: `test${i}`,
-                7: `test${i}`,
-                8: `test${i}`,
-                message: 'test',
-            })),
             requestConfig: {
-                // url: '/edc-profile-service/organization/findPage',
-                // method: 'post',
-                // params: {},
-                // callback: res => res.data,
+                url: '/message/queryPage',
+                method: 'post',
+                params: {},
+                callback: res => ((res.data || {}).page || {}).list || [],
+                stringify: true,
             },
             dialogConfig: {
                 title: '',
-                type: 'add',
+                type: 'save',
                 visible: false,
                 itemInfo: [],
                 addItemInfo: [
                     {
                         label: '消息标题',
-                        code: '1',
+                        code: 'title',
                         type: 'text',
+                        maxlength: 100,
+                        required: true,
                     },
                     {
                         label: '消息类别',
-                        code: '2',
+                        code: 'msgType',
                         type: 'select',
                         options: [],
+                        optionProps: {
+                            key: 'dicKey',
+                            value: 'dicValue',
+                        },
+                        requestConfig: {
+                            url: '/dict/select/list/MSG_TYPE',
+                            method: 'get',
+                            params: {},
+                            callback: res => (res.data || {}).list || [],
+                        },
+                        required: true,
                     },
                     {
                         label: '发送范围',
-                        code: '3',
+                        code: 'sendRange',
                         type: 'select',
                         options: [],
+                        optionProps: {
+                            key: 'dicKey',
+                            value: 'dicValue',
+                        },
+                        requestConfig: {
+                            url: '/dict/select/list/MSG_SEND_RANGE',
+                            method: 'get',
+                            params: {},
+                            callback: res => (res.data || {}).list || [],
+                        },
+                        required: true,
                     },
                     {
                         label: '消息内容',
-                        code: 'message',
+                        code: 'content',
                         type: 'textarea',
+                        maxlength: 500,
+                        required: true,
                     },
                     {
-                        label: '状态',
-                        code: '8',
+                        label: '发送会员标签',
+                        code: 'sendLabel',
                         type: 'select',
                         options: [],
+                        optionProps: {
+                            key: 'dicKey',
+                            value: 'dicValue',
+                        },
+                        requestConfig: {
+                            url: '/dict/select/list/USER_LABEL',
+                            method: 'get',
+                            params: {},
+                            callback: res => (res.data || {}).list || [],
+                        },
+                        required: true,
                     },
                 ],
                 editItemInfo: [],
                 form: {},
             },
             messageVisible: false,
+            currentRow: {},
         };
     },
     methods: {
         // 删除
         handlerDelete(row) {
-            this.handlerBatchDelete([row]);
-        },
-        // 批量删除
-        handlerBatchDelete(rows) {
-            if (!rows.length) {
-                this.$message.warning('请至少勾选一条数据');
-                return;
-            }
             this.$confirm('确定删除吗？', '温馨提示', {
                 type: 'warning',
                 confirmButtonText: '确定删除',
             }).then(() => {
-                this.$http.post('/edc-profile-service/organization/remove', { ids: rows.map(({ id }) => id) }).then(() => {
+                this.$http.post('/message/delete', this.$qs.stringify({ messageId: row.id })).then(() => {
                     this.$message.success('删除成功');
                     if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
                 });
@@ -226,7 +260,7 @@ export default {
         // 打开新增弹窗
         handlerAdd() {
             this.dialogConfig.title = '新增';
-            this.dialogConfig.type = 'add';
+            this.dialogConfig.type = 'save';
             this.dialogConfig.itemInfo = this.dialogConfig.addItemInfo;
             this.dialogConfig.form = {};
             this.dialogConfig.visible = true;
@@ -243,7 +277,7 @@ export default {
         // 创建、编辑用户提交
         handlerSubmit(form, cb) {
             const { type } = this.dialogConfig;
-            const url = `/edc-profile-service/organization/${type}`;
+            const url = `/message/${type}`;
 
             this.$http.post(url, form).then(() => {
                 this.$message.success('保存成功');
@@ -252,7 +286,7 @@ export default {
             }).finally(cb);
         },
         handlerViewMessage(row) {
-            console.log('row', row);
+            this.currentRow = row;
             this.messageVisible = true;
         },
         handlerExport() {},

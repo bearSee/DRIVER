@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import axios from 'axios';
 // AES加密
-import { encryptAES } from 'sibionics-ui/src/utils/encryption';
 import formatDate from 'sibionics-ui/src/filters/formatDate';
 import store from '@/store';
 import errorCode from '@/utils/error-code';
@@ -9,16 +8,7 @@ import errorCode from '@/utils/error-code';
 let loading = null;
 let messageBox = null;
 
-const baseURLConfig = {
-    development: 'http://edc-api.dev.dc.sibionics.com',
-    release: 'http://edc-api.test.dc.sibionics.com',
-    production: '',
-};
-
-const baseURL = baseURLConfig[process.env.NODE_ENV];
-
-// const baseURL = 'http://192.168.0.84:18100';
-// const baseURL = 'http://192.168.0.141:18100';
+const baseURL = 'http://47.107.151.192:28092/dhssys/';
 
 const axiosConfig = {
     baseURL,
@@ -29,16 +19,7 @@ const Axios = axios.create(axiosConfig);
 // 请求拦截
 Axios.interceptors.request.use(
     (config) => {
-        // UUID || 生成随机数
-        const uuid = Array(8).fill().map(() => (((1 + Math.random()) * 0x10000) || 0).toString(16).substring(1)).join('');
-        const aun = window.localStorage.getItem(`accessToken-${window.systemId}`) || '';
         const timeStamp = formatDate(new Date(), 'YYYYMMDDhhmmss');
-        config.headers = {
-            ...config.headers,
-            aun,
-            mid: encryptAES(uuid),
-            ts: encryptAES(timeStamp),
-        };
         // get请求增加时间戳，避免服务器304
         if (config.method === 'get') {
             config.params = {
@@ -95,11 +76,11 @@ Axios.interceptors.response.use(
         };
 
         // 返回成功响应
-        if (String(code) === '200') return res;
+        if (String(code) === '0') return res;
 
         showMessage();
 
-        // 登录失效拦截 906: Token错误 907: Token过期 908: RefreshToken错误 909: RefreshToken过期
+        // 登录失效拦截
         if (['401', '906', '907', '908', '909', '999'].includes(String(code))) {
             // 清除相关菜单权限
             store.commit('clearPermissions');

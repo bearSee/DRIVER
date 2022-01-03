@@ -8,9 +8,9 @@
       stripe
       v-loading="isLoading"
       :row-size="4"
+      :page-param-keys="pageParamKeys"
       :search-info="searchInfo"
       :table-column="tableColumn"
-      :table-data="tableData"
       :request-config="requestConfig">
       <template #goodsDetail="{ row }">
         <el-button
@@ -19,21 +19,23 @@
           详情
         </el-button>
       </template>
-      <template #remarks="{ row }">
+      <template #remark="{ row }">
         <sib-item
           v-model="row._remarks"
           :props="{ type: 'text' }"
-          @blur="handlerSubmitRemarks($event, row)" />
+          @item-change="handlerSubmitRemarks($event, row)" />
       </template>
       <template #operate="{ row }">
         <el-button
           type="text"
-          @click.native="handlerFinish(row)">
+          :disabled="row.orderStatus === 'ORDER_STATUS_FINISH'"
+          @click.native="handlerChangeStatus(row, 'ORDER_STATUS_FINISH')">
           已完成
         </el-button>
         <el-button
           type="text"
-          @click.native="handlerCancel(row)">
+          :disabled="row.orderStatus === 'ORDER_STATUS_CANCELED'"
+          @click.native="handlerChangeStatus(row, 'ORDER_STATUS_CANCELED')">
           确认取消
         </el-button>
       </template>
@@ -54,7 +56,7 @@
         border
         disabled
         :item-info="detailItemInfo"
-        :form="detailForm"
+        :form="currrentRow"
         :is-submit="false"
         @reset="detailVisible = false"
       />
@@ -69,32 +71,46 @@ export default {
     data() {
         return {
             isLoading: false,
+            pageParamKeys: {
+                pageIndex: 'page',
+                pageSize: 'limit',
+            },
             searchInfo: [
                 {
                     label: '订单编号',
-                    code: '2',
+                    code: 'orderNo',
                     type: 'text',
                 },
                 {
                     label: '会员姓名',
-                    code: '3',
+                    code: 'userName',
                     type: 'text',
                 },
                 {
                     label: '状态',
-                    code: '1',
+                    code: 'orderStatus',
                     type: 'select',
                     options: [],
+                    optionProps: {
+                        key: 'dicKey',
+                        value: 'dicValue',
+                    },
+                    requestConfig: {
+                        url: '/dict/select/list/ORDER_STATUS',
+                        method: 'get',
+                        params: {},
+                        callback: res => (res.data || {}).list || [],
+                    },
                 },
             ],
             tableColumn: [
                 {
                     label: '订单编号',
-                    code: '1',
+                    code: 'orderNo',
                 },
                 {
                     label: '商品名称',
-                    code: '2',
+                    code: 'productName',
                 },
                 {
                     label: '商品详情',
@@ -103,23 +119,23 @@ export default {
                 },
                 {
                     label: '会员姓名',
-                    code: '4',
+                    code: 'userName',
                 },
                 {
                     label: '会员手机号码',
-                    code: '5',
+                    code: 'userMobile',
                 },
                 {
                     label: '下单时间',
-                    code: '6',
+                    code: 'orderDt',
                 },
                 {
                     label: '状态',
-                    code: 'status',
+                    code: 'orderStatusName',
                 },
                 {
                     label: '备注',
-                    code: 'remarks',
+                    code: 'remark',
                     type: 'slot',
                 },
                 {
@@ -129,96 +145,76 @@ export default {
                     width: 150,
                 },
             ],
-            tableData: Array(22).fill().map((_, i) => ({
-                id: i,
-                1: `test${i}`,
-                2: `test${i}`,
-                3: `test${i}`,
-                4: `test${i}`,
-                5: `test${i}`,
-                6: `test${i}`,
-            })),
             requestConfig: {
-                // url: '/edc-profile-service/organization/findPage',
-                // method: 'post',
-                // params: {},
-                // callback: res => res.data,
+                url: '/order/queryPage',
+                method: 'post',
+                params: {},
+                callback: res => ((res.data || {}).page || {}).list || [],
+                stringify: true,
             },
             currrentRow: {},
             detailVisible: false,
             detailItemInfo: [
                 {
                     label: '商品详情',
-                    code: '1',
+                    code: 'productDesc',
                     type: 'label',
                 },
                 {
                     label: '是否推荐',
-                    code: '3',
+                    code: 'recommendFlagName',
                     type: 'label',
                 },
                 {
                     label: '推荐理由',
-                    code: '2',
+                    code: 'recommendReason',
                     type: 'label',
                 },
                 {
                     label: '价格',
-                    code: '4',
+                    code: 'price',
                     type: 'label',
                 },
                 {
                     label: '兑换次数',
-                    code: '5',
+                    code: 'exchangeNum',
                     type: 'label',
                 },
                 {
-                    label: '兑换时间',
-                    code: '6',
+                    label: '兑换开始时间',
+                    code: 'exchangeBeginDate',
+                    type: 'label',
+                },
+                {
+                    label: '兑换截止时间',
+                    code: 'exchangeEndDate',
                     type: 'label',
                 },
                 {
                     label: '自提地址',
-                    code: '7',
+                    code: 'address',
                     type: 'label',
                 },
             ],
-            detailForm: {},
         };
     },
     methods: {
         handlerViewDetail(row) {
             this.currrentRow = row;
             this.detailVisible = true;
-            this.detailForm = row;
-            this.$http.post('/', { id: row.id }).then((res) => {
-                this.detailForm = res && res.data && res.data.data || {};
-                this.detailVisible = true;
-            });
         },
-        handlerSubmitRemarks(value, row) {
+        handlerSubmitRemarks(remark, row) {
             this.isLoading = true;
-            this.$http.post('/', { value, id: row.id }).then(() => {
+            this.$http.post('/order/updateRemark', this.$qs.stringify({ remark, orderId: row.id })).then(() => {
                 this.$message.success('保存成功');
-            }).catch(() => {
-                // eslint-disable-next-line no-underscore-dangle
-                row._remarks = row.remarks;
             }).finally(() => {
                 this.isLoading = false;
-            });
-        },
-        handlerFinish(row) {
-            this.isLoading = true;
-            this.$http.post('/', { id: row.id }).then(() => {
-                this.$message.success('操作成功');
                 if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
-            }).finally(() => {
-                this.isLoading = false;
             });
         },
-        handlerCancel(row) {
+        handlerChangeStatus(row, orderStatus) {
             this.isLoading = true;
-            this.$http.post('/', { id: row.id }).then(() => {
+            this.$http.post('/order/updateStatus', this.$qs.stringify({ orderId: row.id, orderStatus })).then(() => {
                 this.$message.success('操作成功');
                 if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
             }).finally(() => {

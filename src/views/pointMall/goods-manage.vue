@@ -17,10 +17,18 @@
         stripe
         v-loading="isLoading"
         :row-size="5"
+        :page-param-keys="pageParamKeys"
         :search-info="searchInfos[pageType]"
         :table-column="tableColumns[pageType]"
-        :table-data="tableData"
         :request-config="requestConfigs[pageType]">
+        <template #content-body>
+          <el-button
+            type="primary"
+            icon="el-icon-plus"
+            @click.native="handlerAdd">
+            新增
+          </el-button>
+        </template>
         <template #goodsDetail="{ row }">
           <el-button
             type="text"
@@ -28,10 +36,10 @@
             详情
           </el-button>
         </template>
-        <template #putShelf="{ row }">
+        <template #publishStatus="{ row }">
           <sib-item
-            v-model="row._putShelf"
-            :props="{ type: 'switch', on: '1', off: '0' }"
+            v-model="row.publishStatus"
+            :props="{ type: 'switch', on: 'Y', off: 'N' }"
             @item-change="handlerSubmitPutShelf($event, row)" />
         </template>
         <template #operate="{ row }">
@@ -72,7 +80,7 @@
           submit-text="保存"
           cancel-text="取消"
           :item-info="detailItemInfo"
-          :form="detailForm"
+          :form="currrentRow"
           @submit="handlerSubmitDetail"
           @reset="detailVisible = false"
         />
@@ -81,8 +89,8 @@
           v-else
           border
           stripe
+          :page-param-keys="pageParamKeys"
           :table-column="photoTableColumn"
-          :table-data="tableData"
           :request-config="photoRequestConfig">
           <template #content-body>
             <el-button
@@ -165,68 +173,84 @@ export default {
         return {
             isLoading: false,
             pageType: 'goodsType',
+            pageParamKeys: {
+                pageIndex: 'page',
+                pageSize: 'limit',
+            },
             searchInfos: {
                 goodsType: [
                     {
                         label: '业务类型',
-                        code: '2',
-                        type: 'select',
-                        options: [],
+                        code: 'categoryName',
+                        type: 'text',
                     },
                 ],
                 goodsList: [
                     {
                         label: '商品名称',
-                        code: '2',
+                        code: 'productName',
                         type: 'text',
                     },
                     {
                         label: '商品类型',
-                        code: '5',
+                        code: 'categoryCode',
                         type: 'select',
                         options: [],
+                        optionProps: {
+                            key: 'categoryCode',
+                            value: 'categoryName',
+                        },
+                        requestConfig: {
+                            url: '/product/category/queryPage',
+                            method: 'post',
+                            params: { page: 1, limit: 999 },
+                            callback: res => ((res.data || {}).page || {}).list || [],
+                            stringify: true,
+                        },
                     },
                     {
                         label: '是否推荐',
-                        code: '3',
+                        code: 'recommendFlag',
                         type: 'select',
-                        options: [
-                            {
-                                key: '1',
-                                value: '是',
-                            },
-                            {
-                                key: '0',
-                                value: '否',
-                            },
-                        ],
+                        options: [],
+                        optionProps: {
+                            key: 'dicKey',
+                            value: 'dicValue',
+                        },
+                        requestConfig: {
+                            url: '/dict/select/list/RECOMMEND_FLAG',
+                            method: 'get',
+                            params: {},
+                            callback: res => (res.data || {}).list || [],
+                        },
                     },
                     {
                         label: '状态',
-                        code: '1',
+                        code: 'productStatus',
                         type: 'select',
-                        options: [
-                            {
-                                key: '1',
-                                value: '售罄',
-                            },
-                            {
-                                key: '2',
-                                value: '正常',
-                            },
-                            {
-                                key: '3',
-                                value: '已下架',
-                            },
-                        ],
+                        options: [],
+                        optionProps: {
+                            key: 'dicKey',
+                            value: 'dicValue',
+                        },
+                        requestConfig: {
+                            url: '/dict/select/list/PRODUCT_STATUS',
+                            method: 'get',
+                            params: {},
+                            callback: res => (res.data || {}).list || [],
+                        },
                     },
                 ],
             },
             tableColumns: {
                 goodsType: [
                     {
-                        label: '商品类型',
-                        code: '1',
+                        label: '商品类型名称',
+                        code: 'categoryName',
+                    },
+                    {
+                        label: '商品类型编码',
+                        code: 'categoryCode',
                     },
                     {
                         label: '操作',
@@ -238,7 +262,7 @@ export default {
                 goodsList: [
                     {
                         label: '商品名称',
-                        code: '2',
+                        code: 'productName',
                     },
                     {
                         label: '商品详情',
@@ -247,19 +271,19 @@ export default {
                     },
                     {
                         label: '数量',
-                        code: '4',
+                        code: 'productNum',
                     },
                     {
                         label: '是否推荐',
-                        code: '5',
+                        code: 'recommendFlagName',
                     },
                     {
                         label: '状态',
-                        code: '6',
+                        code: 'productStatusName',
                     },
                     {
                         label: '上架',
-                        code: 'putShelf',
+                        code: 'publishStatus',
                         type: 'slot',
                     },
                     {
@@ -270,39 +294,38 @@ export default {
                     },
                 ],
             },
-            tableData: Array(22).fill().map((_, i) => ({
-                id: i,
-                1: `test${i}`,
-                2: `test${i}`,
-                3: `test${i}`,
-                4: `test${i}`,
-                5: `test${i}`,
-                6: `test${i}`,
-            })),
             requestConfigs: {
                 goodsType: {
-                    // url: '/edc-profile-service/organization/findPage',
-                    // method: 'post',
-                    // params: {},
-                    // callback: res => res.data,
+                    url: '/product/category/queryPage',
+                    method: 'post',
+                    params: {},
+                    callback: res => ((res.data || {}).page || {}).list || [],
+                    stringify: true,
                 },
                 goodsList: {
-                    // url: '/edc-profile-service/organization/findPage',
-                    // method: 'post',
-                    // params: {},
-                    // callback: res => res.data,
+                    url: '/product/info/queryPage',
+                    method: 'post',
+                    params: {},
+                    callback: res => ((res.data || {}).page || {}).list || [],
+                    stringify: true,
                 },
             },
             dialogConfig: {
                 title: '',
-                type: 'add',
+                type: 'save',
                 visible: false,
                 itemInfo: [],
                 addItemInfos: {
                     goodsType: [
                         {
-                            label: '商品类型',
-                            code: '2',
+                            label: '商品类型名称',
+                            code: 'categoryName',
+                            type: 'text',
+                            required: true,
+                        },
+                        {
+                            label: '商品类型编码',
+                            code: 'categoryCode',
                             type: 'text',
                             required: true,
                         },
@@ -310,50 +333,70 @@ export default {
                     goodsList: [
                         {
                             label: '商品名称',
-                            code: '2',
+                            code: 'productName',
                             type: 'text',
                             required: true,
                         },
                         {
                             label: '数量',
-                            code: '4',
+                            code: 'productNum',
                             type: 'number',
                             required: true,
                         },
                         {
-                            label: '是否推荐',
-                            code: '3',
+                            label: '商品类型',
+                            code: 'categoryCode',
                             type: 'select',
-                            options: [
-                                {
-                                    key: '1',
-                                    value: '是',
-                                },
-                                {
-                                    key: '0',
-                                    value: '否',
-                                },
-                            ],
+                            options: [],
+                            optionProps: {
+                                key: 'categoryCode',
+                                value: 'categoryName',
+                            },
+                            requestConfig: {
+                                url: '/product/category/queryPage',
+                                method: 'post',
+                                params: { page: 1, limit: 999 },
+                                callback: res => ((res.data || {}).page || {}).list || [],
+                                stringify: true,
+                            },
+                        },
+                        {
+                            label: '是否推荐',
+                            code: 'recommendFlag',
+                            type: 'select',
+                            options: [],
+                            optionProps: {
+                                key: 'dicKey',
+                                value: 'dicValue',
+                            },
+                            requestConfig: {
+                                url: '/dict/select/list/RECOMMEND_FLAG',
+                                method: 'get',
+                                params: {},
+                                callback: res => (res.data || {}).list || [],
+                            },
+                        },
+                        {
+                            label: '推荐理由',
+                            code: 'recommendReason',
+                            type: 'textarea',
+                            maxlength: 500,
                         },
                         {
                             label: '状态',
-                            code: 'status',
+                            code: 'productStatus',
                             type: 'select',
-                            options: [
-                                {
-                                    key: '1',
-                                    value: '售罄',
-                                },
-                                {
-                                    key: '2',
-                                    value: '正常',
-                                },
-                                {
-                                    key: '3',
-                                    value: '已下架',
-                                },
-                            ],
-                            required: true,
+                            options: [],
+                            optionProps: {
+                                key: 'dicKey',
+                                value: 'dicValue',
+                            },
+                            requestConfig: {
+                                url: '/dict/select/list/PRODUCT_STATUS',
+                                method: 'get',
+                                params: {},
+                                callback: res => (res.data || {}).list || [],
+                            },
                         },
                     ],
                 },
@@ -365,87 +408,70 @@ export default {
             dialogTab: 'detail',
             detailItemInfo: [
                 {
-                    label: '商品详情',
-                    code: '1',
+                    label: '商品描述',
+                    code: 'productDesc',
                     type: 'textarea',
+                    maxlength: 500,
                 },
                 {
-                    label: '是否推荐',
-                    code: '3',
-                    type: 'select',
-                    options: [
-                        {
-                            key: '1',
-                            value: '是',
-                        },
-                        {
-                            key: '0',
-                            value: '否',
-                        },
-                    ],
-                },
-                {
-                    label: '推荐理由',
-                    code: '2',
-                    type: 'textarea',
-                },
-                {
-                    label: '价格',
-                    code: '4',
+                    label: '商品价格',
+                    code: 'price',
                     type: 'number',
                 },
                 {
                     label: '兑换次数',
-                    code: '5',
+                    code: 'exchangeNum',
                     type: 'number',
                 },
                 {
                     label: '兑换时间',
-                    code: '6',
+                    code: 'exchangeDate',
                     type: 'daterange',
-                    startCode: 'startDate',
-                    endCode: 'endDate',
+                    startCode: 'exchangeBeginDate',
+                    endCode: 'exchangeEndDate',
                 },
                 {
                     label: '自提地址',
-                    code: '7',
+                    code: 'address',
                     type: 'textarea',
                 },
             ],
-            detailForm: {},
             photoTableColumn: [
                 {
                     label: '附件',
-                    code: '1',
+                    code: 'fileOriginalName',
+                    width: 350,
                 },
                 {
                     label: '是否首页',
-                    code: '2',
+                    code: 'isFirst',
+                    formatter: ({ isFirst }) => ({ Y: '是', N: '否' })[isFirst],
                 },
                 {
                     label: '排序',
-                    code: '3',
+                    code: 'sort',
                 },
                 {
                     label: '备注',
-                    code: '4',
+                    code: 'remark',
                 },
                 {
                     label: '操作',
                     code: 'operate',
                     type: 'slot',
-                    width: 150,
+                    width: 120,
                 },
             ],
             photoRequestConfig: {
-                // url: '/edc-profile-service/organization/findPage',
-                // method: 'post',
-                // params: {},
-                // callback: res => res.data,
+                url: '/product/file/list',
+                method: 'post',
+                params: {},
+                callback: res => (res.data || {}).data || [],
+                stringify: true,
             },
             photoConfig: {
                 title: '',
-                type: 'add',
+                type: 'save',
                 visible: false,
                 itemInfo: [],
                 addItemInfo: [
@@ -456,27 +482,27 @@ export default {
                     },
                     {
                         label: '是否首页',
-                        code: '2',
+                        code: 'isFirst',
                         type: 'select',
                         options: [
                             {
-                                key: '1',
+                                key: 'Y',
                                 value: '是',
                             },
                             {
-                                key: '0',
+                                key: 'N',
                                 value: '否',
                             },
                         ],
                     },
                     {
                         label: '排序',
-                        code: '3',
+                        code: 'sort',
                         type: 'number',
                     },
                     {
                         label: '备注',
-                        code: '4',
+                        code: 'remark',
                         type: 'textarea',
                     },
                 ],
@@ -487,22 +513,19 @@ export default {
     },
     methods: {
         handlerViewDetail(row) {
+            row.exchangeDate = [row.exchangeBeginDate || '', row.exchangeEndDate || ''];
             this.currrentRow = row;
             this.detailVisible = true;
-            this.$http.post('/', { id: row.id }).then((res) => {
-                this.detailForm = res && res.data && res.data.data || {};
-                this.detailVisible = true;
-            });
+            this.photoRequestConfig.params.productInfoId = row.id;
         },
-        handlerSubmitPutShelf(value, row) {
+        handlerSubmitPutShelf(publishStatus, row) {
             this.isLoading = true;
-            this.$http.post('/', { value, id: row.id }).then(() => {
+            console.log('publishStatus', publishStatus);
+            this.$http.post('/product/info/update', { ...row, publishStatus }).then(() => {
                 this.$message.success('保存成功');
-            }).catch(() => {
-                // eslint-disable-next-line no-underscore-dangle
-                row._putShelf = row.putShelf;
             }).finally(() => {
                 this.isLoading = false;
+                if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
             });
         },
         // 删除
@@ -511,8 +534,9 @@ export default {
                 type: 'warning',
                 confirmButtonText: '确定删除',
             }).then(() => {
-                const url = this.pageType === 'goodsType' ? '/url1' : '/url2';
-                this.$http.post(url, { id }).then(() => {
+                const url = this.pageType === 'goodsType' ? '/product/category/delete' : '/product/info/delete';
+                const params = this.pageType === 'goodsType' ? { productCategoryId: id } : { productInfoId: id };
+                this.$http.post(url, this.$qs.stringify(params)).then(() => {
                     this.$message.success('删除成功');
                     if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
                 });
@@ -521,7 +545,7 @@ export default {
         // 打开新增弹窗
         handlerAdd() {
             this.dialogConfig.title = '新增';
-            this.dialogConfig.type = 'add';
+            this.dialogConfig.type = 'save';
             this.dialogConfig.itemInfo = this.dialogConfig.addItemInfos[this.pageType];
             this.dialogConfig.form = {};
             this.dialogConfig.visible = true;
@@ -539,13 +563,13 @@ export default {
         handlerSubmit(form, cb) {
             const { type } = this.dialogConfig;
             const urlConfig = {
-                add: {
-                    goodsType: '/url1',
-                    goodsList: '/url2',
+                save: {
+                    goodsType: '/product/category/save',
+                    goodsList: '/product/info/save',
                 },
                 update: {
-                    goodsType: '/url3',
-                    goodsList: '/url4',
+                    goodsType: '/product/category/update',
+                    goodsList: '/product/info/update',
                 },
             };
 
@@ -557,7 +581,7 @@ export default {
         },
         // 提交商品详情
         handlerSubmitDetail(form, cb) {
-            this.$http.post('', form).then(() => {
+            this.$http.post('/product/info/update', form).then(() => {
                 this.$message.success('保存成功');
                 this.detailVisible = false;
                 if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
@@ -565,7 +589,7 @@ export default {
         },
         handlerAddPhoto() {
             this.photoConfig.title = '新增';
-            this.photoConfig.type = 'add';
+            this.photoConfig.type = 'save';
             this.photoConfig.itemInfo = this.photoConfig.addItemInfo;
             this.photoConfig.form = {};
             this.photoConfig.visible = true;
@@ -579,7 +603,7 @@ export default {
             this.photoConfig.visible = true;
         },
         handlerSubmitPhoto(form, cb) {
-            this.$http.post('', form).then(() => {
+            this.$http.post('/product/file/save', form).then(() => {
                 this.$message.success('保存成功');
                 this.detailVisible = false;
                 if (this.$refs.dialogTable) this.$refs.dialogTable.getTableData();
@@ -591,7 +615,7 @@ export default {
                 type: 'warning',
                 confirmButtonText: '确定删除',
             }).then(() => {
-                this.$http.post('url', { id }).then(() => {
+                this.$http.post('/product/file/delete', this.$qs.stringify({ productFileId: id })).then(() => {
                     this.$message.success('删除成功');
                     if (this.$refs.dialogTable) this.$refs.dialogTable.getTableData();
                 });
