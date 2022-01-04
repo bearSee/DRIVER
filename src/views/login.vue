@@ -50,11 +50,11 @@
                 @keyup.enter.native="handlerSubmit"
               />
             </el-form-item>
-            <el-button
+            <!-- <el-button
               type="text"
               @click="handleForgetPwd">
               忘记密码?
-            </el-button>
+            </el-button> -->
             <el-form-item class="form-item-btn">
               <el-button
                 class="login-sign-in"
@@ -71,7 +71,7 @@
 </template>
 <script>
 import { mapMutations } from 'vuex';
-import { encryptAES } from 'sibionics-ui/src/utils/encryption';
+// import { encryptAES } from 'sibionics-ui/src/utils/encryption';
 
 export default {
     name: 'Login',
@@ -117,31 +117,17 @@ export default {
                     this.clearPermissions(true);
                     // AES加密后的密码
                     const { username, password } = this.formData;
-                    const encryptPwd = encryptAES(password);
-                    this.$http.post('/edc-auth/auth/login', {
+                    // const encryptPwd = encryptAES(password);
+                    this.$http.post('/init/login', this.$qs.stringify({
                         username,
-                        password: encryptPwd,
-                        // 客户端类型，101：后台管理系统 web，201：手机 APP
-                        clientType: 101,
-                        // 系统ID，1：后端系统，2：前端系统
-                        loginSysId: 1,
-                    }, { loading: true }).then((res) => {
-                        const { accessToken, refreshToken } = (res && res.data || {}).data || {};
+                        password,
+                    }), { loading: true }).then((res) => {
                         // 存储Token
-                        window.localStorage.setItem(`accessToken-${window.systemId}`, accessToken);
-                        window.localStorage.setItem(`refreshToken-${window.systemId}`, refreshToken);
+                        window.localStorage.setItem('Authorization', (res && res.data || {}).Authorization);
                         this.$router.push('/master').catch(() => {});
-                    }).finally(() => {
-                        this.handleRefreshCaptcha();
                     });
                 }
             });
-        },
-        handleRefreshCaptcha() {
-            if (this.$refs.captcha && this.$refs.captcha[0]) this.$refs.captcha[0].refreshCaptcha();
-        },
-        handleForgetPwd() {
-            this.$message.warning('请联系管理员');
         },
     },
 };

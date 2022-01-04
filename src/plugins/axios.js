@@ -20,6 +20,9 @@ const Axios = axios.create(axiosConfig);
 Axios.interceptors.request.use(
     (config) => {
         const timeStamp = formatDate(new Date(), 'YYYYMMDDhhmmss');
+        config.headers = {
+            Authorization: window.localStorage.getItem('Authorization'),
+        };
         // get请求增加时间戳，避免服务器304
         if (config.method === 'get') {
             config.params = {

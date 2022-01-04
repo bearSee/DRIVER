@@ -6,7 +6,7 @@
           <img
             src="@/assets/image/logo.jpg"
             alt="">
-          <!-- <span>华强北司机之家</span> -->
+          <span>华强北司机之家</span>
         </div>
         <div class="drop-box">
           <sib-dropdown

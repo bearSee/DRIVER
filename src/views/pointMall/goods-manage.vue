@@ -97,7 +97,7 @@
               type="primary"
               size="mini"
               icon="el-icon-plus"
-              @click.native="handlerAddPhoto(row)">
+              @click.native="handlerAddPhoto">
               上传
             </el-button>
           </template>
@@ -143,7 +143,7 @@
       />
     </el-dialog>
     <el-dialog
-      class="center"
+      class="upload-dialog center"
       width="500px"
       append-to-body
       lock-scroll
@@ -154,21 +154,59 @@
       :close-on-click-modal="false"
       :close-on-press-escape="false">
       <sib-form
+        ref="dialogForm"
         submit-text="保存"
         cancel-text="取消"
         :item-info="photoConfig.itemInfo"
         :form="photoConfig.form"
         @submit="handlerSubmitPhoto"
-        @reset="photoConfig.visible = false"
-      />
+        @reset="photoConfig.visible = false">
+        <template #files="{ form }">
+          <div
+            class="image-box"
+            v-if="form.imageUrl">
+            <el-image
+              :src="form.imageUrl"
+              :preview-src-list="[form.imageUrl]" />
+            <i
+              class="el-icon-error"
+              @click="handlerRemoveImage" />
+          </div>
+          <el-button
+            type="primary"
+            icon="el-icon-plus"
+            v-else
+            @click.native="handlerOpenUpload(form)">
+            上传
+          </el-button>
+        </template>
+      </sib-form>
+    </el-dialog>
+    <el-dialog
+      class="center"
+      width="720px"
+      title="图片上传"
+      append-to-body
+      lock-scroll
+      v-dialogDrag
+      v-if="uploadVisible"
+      :visible.sync="uploadVisible"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false">
+      <upload-cover
+        :src="currentImage"
+        @submit="handlerUpload"
+        @cancel="uploadVisible = false" />
     </el-dialog>
   </div>
 </template>
 
 <script>
+import uploadCover from '@/components/upload-cover';
 
 export default {
     name: 'GoodsManage',
+    components: { uploadCover },
     data() {
         return {
             isLoading: false,
@@ -477,8 +515,8 @@ export default {
                 addItemInfo: [
                     {
                         label: '附件',
-                        code: '1',
-                        type: 'upload',
+                        code: 'files',
+                        type: 'slot',
                     },
                     {
                         label: '是否首页',
@@ -499,6 +537,7 @@ export default {
                         label: '排序',
                         code: 'sort',
                         type: 'number',
+                        value: 1,
                     },
                     {
                         label: '备注',
@@ -509,6 +548,7 @@ export default {
                 editItemInfo: [],
                 form: {},
             },
+            uploadVisible: false,
         };
     },
     methods: {
@@ -603,7 +643,7 @@ export default {
             this.photoConfig.visible = true;
         },
         handlerSubmitPhoto(form, cb) {
-            this.$http.post('/product/file/save', form).then(() => {
+            this.$http.post('/product/file/save', this.$qs.stringify(form)).then(() => {
                 this.$message.success('保存成功');
                 this.detailVisible = false;
                 if (this.$refs.dialogTable) this.$refs.dialogTable.getTableData();
@@ -620,6 +660,17 @@ export default {
                     if (this.$refs.dialogTable) this.$refs.dialogTable.getTableData();
                 });
             });
+        },
+        handlerOpenUpload(form) {
+            this.uploadVisible = true;
+            this.currentImage = form.imageUrl;
+        },
+        handlerRemoveImage() {
+            this.$set(this.$refs.dialogForm.currentForm, 'imageUrl', '');
+        },
+        handlerUpload(path) {
+            this.$set(this.$refs.dialogForm.currentForm, 'imageUrl', path);
+            this.uploadVisible = false;
         },
         handlerDownloadPhoto(row) {
             if (row.url) window.download(row.url);
@@ -644,6 +695,31 @@ export default {
         .el-tabs {
             .el-tabs__content .sib-table {
                 height: 500px;
+            }
+        }
+    }
+}
+.upload-dialog {
+    .files-temp  {
+        .el-form-item__content {
+            .image-box {
+                width: 60px;
+                height: 60px;
+                position: relative;
+                .el-image {
+                    width: 60px;
+                    height: 60px;
+                }
+                .el-icon-error {
+                    position: absolute;
+                    position: absolute;
+                    top: -7px;
+                    right: -7px;
+                    color: black;
+                    font-size: 18px;
+                    cursor: pointer;
+                    z-index: 2;
+                }
             }
         }
     }

@@ -21,7 +21,7 @@
       </template>
       <template #remark="{ row }">
         <sib-item
-          v-model="row._remarks"
+          v-model="row.remark"
           :props="{ type: 'text' }"
           @item-change="handlerSubmitRemarks($event, row)" />
       </template>
@@ -204,6 +204,7 @@ export default {
             this.detailVisible = true;
         },
         handlerSubmitRemarks(remark, row) {
+            // if (!remark) return;
             this.isLoading = true;
             this.$http.post('/order/updateRemark', this.$qs.stringify({ remark, orderId: row.id })).then(() => {
                 this.$message.success('保存成功');
