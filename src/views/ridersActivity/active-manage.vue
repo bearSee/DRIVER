@@ -252,7 +252,7 @@ export default {
             settingItemInfo: [
                 {
                     label: '每日积分封顶（个人）',
-                    code: '1',
+                    code: 'score',
                     type: 'text',
                     valueType: 'number',
                     maxlength: 10,
@@ -370,9 +370,9 @@ export default {
     },
     methods: {
         getSetting() {
-            // this.$http.post('url').then((res) => {
-            //     this.settingForm = res && res.data && res.data.data || {};
-            // });
+            this.$http.post('/activitySet/list').then((res) => {
+                this.settingForm = res && res.data || {};
+            });
         },
         // 启用/禁用
         handlerEnable(row, enabled) {
@@ -429,7 +429,7 @@ export default {
             this.configVisible = true;
         },
         handlerSubmitSetting(form, cb) {
-            this.$http.post('url', form).then(() => {
+            this.$http.post('/activitySet/update', form).then(() => {
                 this.$message.success('保存成功');
                 this.settingVisible = false;
             }).finally(cb);
@@ -441,7 +441,6 @@ export default {
             this.configTableDatas[code].splice(index, 1);
         },
         handlerSubmitConfig(form, cb) {
-            console.log('form', form);
             this.$http.post('/activity/config', {
                 activityId: this.currentRow.id,
                 activityCfg: JSON.stringify(form),
