@@ -252,7 +252,7 @@ export default {
             settingItemInfo: [
                 {
                     label: '每日积分封顶（个人）',
-                    code: 'score',
+                    code: 'scoreMaxPerson',
                     type: 'text',
                     valueType: 'number',
                     maxlength: 10,
@@ -261,7 +261,7 @@ export default {
                 },
                 {
                     label: '每日积分封顶（平台）',
-                    code: '2',
+                    code: 'scoreMaxCompany',
                     type: 'text',
                     valueType: 'number',
                     maxlength: 10,
@@ -371,7 +371,11 @@ export default {
     methods: {
         getSetting() {
             this.$http.post('/activitySet/list').then((res) => {
-                this.settingForm = res && res.data || {};
+                const { scoreMaxPerson, scoreMaxCompany } = (res && res.data && res.data.data || [])[0] || {};
+                this.settingForm = {
+                    scoreMaxPerson: String(scoreMaxPerson || 0),
+                    scoreMaxCompany: String(scoreMaxCompany || 0),
+                };
             });
         },
         // 启用/禁用
@@ -432,6 +436,7 @@ export default {
             this.$http.post('/activitySet/update', form).then(() => {
                 this.$message.success('保存成功');
                 this.settingVisible = false;
+                this.getSetting();
             }).finally(cb);
         },
         handlerAddRule(code) {

@@ -41,9 +41,9 @@
       </template>
     </sib-table>
     <el-dialog
-      class="center"
-      width="500px"
-      title="商品详情"
+      class="order-detail-dialog center"
+      width="800px"
+      title="订单详情"
       append-to-body
       lock-scroll
       v-dialogDrag
@@ -51,10 +51,17 @@
       :visible.sync="detailVisible"
       :close-on-click-modal="false"
       :close-on-press-escape="false">
+      <div class="image-box">
+        <el-image
+          v-if="currrentRow.filePath"
+          :src="currrentRow.filePath"
+          :preview-src-list="[currrentRow.filePath]" />
+      </div>
       <sib-form
         cancel-text="取消"
         border
         disabled
+        :row-size="2"
         :item-info="detailItemInfo"
         :form="currrentRow"
         :is-submit="false"
@@ -113,7 +120,7 @@ export default {
                     code: 'productName',
                 },
                 {
-                    label: '商品详情',
+                    label: '订单详情',
                     code: 'goodsDetail',
                     type: 'slot',
                 },
@@ -156,43 +163,43 @@ export default {
             detailVisible: false,
             detailItemInfo: [
                 {
-                    label: '商品详情',
-                    code: 'productDesc',
+                    label: '订单编号',
+                    code: 'orderNo',
                     type: 'label',
                 },
                 {
-                    label: '是否推荐',
-                    code: 'recommendFlagName',
+                    label: '商品名称',
+                    code: 'productName',
                     type: 'label',
                 },
                 {
-                    label: '推荐理由',
-                    code: 'recommendReason',
+                    label: '商品价格',
+                    code: 'productPrice',
                     type: 'label',
                 },
                 {
-                    label: '价格',
-                    code: 'price',
+                    label: '商品数量',
+                    code: 'productNum',
                     type: 'label',
                 },
                 {
-                    label: '兑换次数',
-                    code: 'exchangeNum',
+                    label: '会员姓名',
+                    code: 'userName',
                     type: 'label',
                 },
                 {
-                    label: '兑换开始时间',
-                    code: 'exchangeBeginDate',
+                    label: '会员手机号码',
+                    code: 'userMobile',
                     type: 'label',
                 },
                 {
-                    label: '兑换截止时间',
-                    code: 'exchangeEndDate',
+                    label: '下单时间',
+                    code: 'orderDt',
                     type: 'label',
                 },
                 {
-                    label: '自提地址',
-                    code: 'address',
+                    label: '状态',
+                    code: 'orderStatusName',
                     type: 'label',
                 },
             ],
@@ -231,5 +238,19 @@ export default {
 
 .order-manage {
 
+}
+.order-detail-dialog {
+    .image-box {
+        display: flex;
+        margin-bottom: 15px;
+        .el-image {
+            width: 100px;
+            height: 100px;
+            margin: auto;
+        }
+        .text-label {
+
+        }
+    }
 }
 </style>

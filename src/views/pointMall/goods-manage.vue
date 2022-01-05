@@ -162,12 +162,15 @@
         @submit="handlerSubmitPhoto"
         @reset="photoConfig.visible = false">
         <template #files="{ form }">
+          <img
+            :src="form.filePath"
+            alt="">
           <div
             class="image-box"
-            v-if="form.filePath">
+            v-if="currentFilePath || form.filePath">
             <el-image
-              :src="form.filePath"
-              :preview-src-list="[form.filePath]" />
+              :src="currentFilePath || form.filePath"
+              :preview-src-list="[currentFilePath || form.filePath]" />
             <i
               class="el-icon-error"
               @click="handlerRemoveImage" />
@@ -194,6 +197,7 @@
       :close-on-click-modal="false"
       :close-on-press-escape="false">
       <upload-cover
+        ref="upload"
         :src="currentImage"
         @submit="handlerUpload"
         @cancel="uploadVisible = false" />
@@ -218,7 +222,7 @@ export default {
             searchInfos: {
                 goodsType: [
                     {
-                        label: '业务类型',
+                        label: '商品类型',
                         code: 'categoryName',
                         type: 'text',
                     },
@@ -231,15 +235,15 @@ export default {
                     },
                     {
                         label: '商品类型',
-                        code: 'categoryCode',
+                        code: 'productCategoryId',
                         type: 'select',
                         options: [],
                         optionProps: {
-                            key: 'categoryCode',
+                            key: 'id',
                             value: 'categoryName',
                         },
                         requestConfig: {
-                            url: '/product/category/queryPage',
+                            url: '/product/info/queryPage',
                             method: 'post',
                             params: { page: 1, limit: 999 },
                             callback: res => ((res.data || {}).page || {}).list || [],
@@ -478,7 +482,7 @@ export default {
                 {
                     label: '附件',
                     code: 'fileOriginalName',
-                    width: 350,
+                    width: 340,
                 },
                 {
                     label: '是否首页',
@@ -549,6 +553,8 @@ export default {
                 form: {},
             },
             uploadVisible: false,
+            currentImage: '',
+            currentFilePath: '',
         };
     },
     methods: {
@@ -633,19 +639,32 @@ export default {
             this.photoConfig.itemInfo = this.photoConfig.addItemInfo;
             this.photoConfig.form = {};
             this.photoConfig.visible = true;
+            this.currentFilePath = '';
         },
         handlerEditPhoto(row) {
             const { addItemInfo, editItemInfo } = this.photoConfig;
+            const filePath = row.filePath ? `/product/images/${row.filePath}` : '';
             this.photoConfig.title = '编辑';
             this.photoConfig.type = 'update';
             this.photoConfig.itemInfo = editItemInfo && editItemInfo.length ? editItemInfo : (addItemInfo || []);
             this.photoConfig.form = JSON.parse(JSON.stringify(row));
+            this.photoConfig.form.filePath = filePath;
             this.photoConfig.visible = true;
+            this.currentFilePath = '';
         },
         handlerSubmitPhoto(form, cb) {
-            this.$http.post('/product/file/save', this.$qs.stringify(form)).then(() => {
+            const { type } = this.photoConfig;
+            if (!this.currentFilePath && !form.filePath && type === 'save') {
+                this.$message.warning('文件附件为空');
+                return;
+            }
+            form.productInfoId = this.currrentRow.id;
+            const formData = new FormData();
+            if (this.currentFilePath) formData.append('file', this.dataURLtoFile(this.currentFilePath));
+            formData.append('productFileDtoStr', JSON.stringify(form));
+            this.$http.post(`/product/file/${type}`, formData).then(() => {
                 this.$message.success('保存成功');
-                this.detailVisible = false;
+                this.photoConfig.visible = false;
                 if (this.$refs.dialogTable) this.$refs.dialogTable.getTableData();
             }).finally(cb);
         },
@@ -663,17 +682,32 @@ export default {
         },
         handlerOpenUpload(form) {
             this.uploadVisible = true;
-            this.currentImage = form.filePath;
+            this.currentImage = form.filePath || this.currentFilePath || '';
         },
         handlerRemoveImage() {
             this.$set(this.$refs.dialogForm.currentForm, 'filePath', '');
         },
         handlerUpload(path) {
-            this.$set(this.$refs.dialogForm.currentForm, 'filePath', path);
+            this.currentFilePath = path;
             this.uploadVisible = false;
         },
-        handlerDownloadPhoto(row) {
-            if (row.url) window.download(row.url);
+        dataURLtoFile(dataurl) {
+            const arr = dataurl.split(',');
+            const type = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            // eslint-disable-next-line no-plusplus
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            const blob = new Blob([u8arr], { type });
+            const imageType = (this.$refs.upload || {}).imageType || 'jpg';
+            console.log('imageType', (this.$refs.upload || {}).imageType);
+            return new File([blob], `商品图片${(new Date()).getTime()}.${imageType}`);
+        },
+        handlerDownloadPhoto({ filePath, fileOriginalName }) {
+            if (filePath) window.download(`/product/images/${filePath}`, fileOriginalName || 'pic.jpg');
         },
     },
 };

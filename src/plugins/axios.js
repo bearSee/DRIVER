@@ -84,10 +84,10 @@ Axios.interceptors.response.use(
         showMessage();
 
         // 登录失效拦截
-        if (['401', '906', '907', '908', '909', '999'].includes(String(code))) {
+        if (['10000'].includes(String(code))) {
             // 清除相关菜单权限
             store.commit('clearPermissions');
-            // window.location.replace('/#/login');
+            window.location.replace('/#/login');
         }
 
         return Promise.reject(res);
