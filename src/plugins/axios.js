@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import axios from 'axios';
-// AES加密
 import formatDate from 'sibionics-ui/src/filters/formatDate';
 import store from '@/store';
 import errorCode from '@/utils/error-code';
