@@ -447,6 +447,7 @@ export default {
             }).then(() => {
                 this.$message.success('保存成功');
                 this.configVisible = false;
+                if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
             }).finally(cb);
         },
         handlerViewExplain(row) {
