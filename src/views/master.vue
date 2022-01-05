@@ -6,7 +6,6 @@
           <img
             src="@/assets/image/logo.jpg"
             alt="">
-          <span>华强北司机之家</span>
         </div>
         <div class="drop-box">
           <sib-dropdown
@@ -15,7 +14,7 @@
             <div class="drop-content-box">
               <el-avatar icon="el-icon-user-solid" />
               <p class="userName">
-                {{ userInfo.nickname || '' }}
+                {{ username || '' }}
               </p>
               <i class="el-icon-caret-bottom" />
             </div>
@@ -30,7 +29,6 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
 
 export default {
     name: 'Master',
@@ -88,10 +86,8 @@ export default {
                     ],
                 },
             ],
+            username: window.localStorage.getItem('username'),
         };
-    },
-    computed: {
-        ...mapState(['userInfo']),
     },
     methods: {
         handlerSelect({ key }) {
@@ -131,19 +127,10 @@ export default {
             margin-bottom: 2px;
             .logo-box {
               display: flex;
-              margin: 0 20px;
+              margin: 0 10px;
               img {
-                width: 50px;
                 height: 50px;
                 margin: auto 0;
-              }
-              span {
-                font-family: PingFangSC-Semibold, PingFang SC;
-                color: $theme;
-                font-weight: 600;
-                font-size: 22px;
-                margin: auto 0;
-                margin-left: 10px;
               }
             }
             .drop-box {

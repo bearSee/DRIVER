@@ -21,6 +21,7 @@ Axios.interceptors.request.use(
     (config) => {
         const timeStamp = formatDate(new Date(), 'YYYYMMDDhhmmss');
         config.headers = {
+            ...config.headers,
             Authorization: window.localStorage.getItem('Authorization'),
         };
         // get请求增加时间戳，避免服务器304
@@ -69,11 +70,11 @@ Axios.interceptors.response.use(
             if (!isJson) return res;
             res.data = await readBlob(res);
         }
-        const { code, message } = res.data || {};
+        const { code, msg } = res.data || {};
 
         // 错误提示拦截
         const showMessage = () => {
-            const messageTip = errorCode[code] || message || '服务器响应失败，请稍后再试';
+            const messageTip = errorCode[code] || msg || '服务器响应失败，请稍后再试';
             if (messageBox) messageBox.close();
             messageBox = Vue.prototype.$message.error(messageTip);
         };

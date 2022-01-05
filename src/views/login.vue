@@ -4,11 +4,6 @@
       <el-col
         class="login-img"
         :span="12">
-        <div class="logo-box">
-          <img
-            src="@/assets/image/login-logo.png"
-            alt="登录页logo">
-        </div>
         <div class="login-pic">
           <img
             src="@/assets/image/login-pic.png"
@@ -28,11 +23,10 @@
           <div class="login-center">
             <div class="login-center-head">
               <h3 class="text-h3">
-                华强北司机之家
+                <img
+                  src="@/assets/image/logo.jpg"
+                  alt="登录页logo">
               </h3>
-              <h4 class="text-h4">
-                Login your account
-              </h4>
             </div>
             <el-form-item
               v-for="item in formItems"
@@ -103,7 +97,7 @@ export default {
                 ],
                 password: [
                     {
-                        required: true, min: 6, message: '密码不能小于6位', trigger: 'blur',
+                        required: true, message: '请输入密码', trigger: 'blur',
                     },
                 ],
             },
@@ -118,12 +112,10 @@ export default {
                     // AES加密后的密码
                     const { username, password } = this.formData;
                     // const encryptPwd = encryptAES(password);
-                    this.$http.post('/init/login', this.$qs.stringify({
-                        username,
-                        password,
-                    }), { loading: true }).then((res) => {
+                    this.$http.post('/init/login', this.$qs.stringify({ username, password }), { loading: true }).then((res) => {
                         // 存储Token
                         window.localStorage.setItem('Authorization', (res && res.data || {}).Authorization);
+                        window.localStorage.setItem('username', username);
                         this.$router.push('/master').catch(() => {});
                     });
                 }
@@ -143,12 +135,12 @@ export default {
     position: relative;
     overflow: auto;
     .login-row {
-        width: 80vw;
-        min-width: 1000px;
-        max-width: 1490px;
-        height: calc(80vw * (896 / 1490));
-        min-height: 600px;
-        max-height: 760px;
+        width: 70vw;
+        min-width: 800px;
+        max-width: 1200px;
+        height: calc(70vw * (896 / 1490));
+        min-height: 500px;
+        max-height: 634px;
         background: #FFFFFF;
         box-shadow: 0px 9px 19px 0px rgba(0, 0, 0, 0.24);
         border-radius: 14px;
@@ -182,7 +174,7 @@ export default {
         .login-form {
             height: 100%;
             .login-center {
-                padding: calc(100 * 80vw / 1490) 60px 0 60px;
+                padding: calc(60 * 80vw / 1490) 60px 0 60px;
                 width: 100%;
                 height: 100%;
                 font-weight: 600;
@@ -194,17 +186,11 @@ export default {
                     width: 100px;
                 }
                 .login-center-head {
-                    margin-bottom: calc(45 * 80vw / 1490);
-                    h3 {
-                        font-size: 35px;
-                        color: #2D2D2D;
-                        line-height: 49px;
-                        letter-spacing: 4px;
-                    }
-                    h4 {
-                        font-size: 20px;
-                        color: #898CA8;
-                        line-height: 28px;
+                    margin-bottom: calc(70 * 80vw / 1490);
+                    .text-h3 {
+                        img {
+                            width: 100%;
+                        }
                     }
                 }
                 .el-form-item {
@@ -230,7 +216,7 @@ export default {
                         }
                     }
                     &.form-item-btn {
-                        // margin-top: calc(30 * 80vw / 1490);
+                        margin-top: calc(40 * 80vw / 1490);
                         .login-sign-in {
                             width: calc(244 * 80vw / 1490);
                             height: calc(70 * 80vw / 1490);

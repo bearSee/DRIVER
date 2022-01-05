@@ -16,7 +16,7 @@
         border
         stripe
         v-loading="isLoading"
-        :row-size="5"
+        :row-size="4"
         :page-param-keys="pageParamKeys"
         :search-info="searchInfos[pageType]"
         :table-column="tableColumns[pageType]"
@@ -98,7 +98,7 @@
               size="mini"
               icon="el-icon-plus"
               @click.native="handlerAddPhoto">
-              上传
+              新增
             </el-button>
           </template>
           <template #operate="{ row }">
@@ -164,10 +164,10 @@
         <template #files="{ form }">
           <div
             class="image-box"
-            v-if="form.imageUrl">
+            v-if="form.filePath">
             <el-image
-              :src="form.imageUrl"
-              :preview-src-list="[form.imageUrl]" />
+              :src="form.filePath"
+              :preview-src-list="[form.filePath]" />
             <i
               class="el-icon-error"
               @click="handlerRemoveImage" />
@@ -663,13 +663,13 @@ export default {
         },
         handlerOpenUpload(form) {
             this.uploadVisible = true;
-            this.currentImage = form.imageUrl;
+            this.currentImage = form.filePath;
         },
         handlerRemoveImage() {
-            this.$set(this.$refs.dialogForm.currentForm, 'imageUrl', '');
+            this.$set(this.$refs.dialogForm.currentForm, 'filePath', '');
         },
         handlerUpload(path) {
-            this.$set(this.$refs.dialogForm.currentForm, 'imageUrl', path);
+            this.$set(this.$refs.dialogForm.currentForm, 'filePath', path);
             this.uploadVisible = false;
         },
         handlerDownloadPhoto(row) {
