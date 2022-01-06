@@ -94,68 +94,11 @@
       />
     </el-dialog>
     <!-- 发放机制 弹窗 -->
-    <el-dialog
-      class="config-dialog center"
-      width="850px"
-      title="发放机制"
-      append-to-body
-      lock-scroll
-      v-dialogDrag
+    <active-config
       v-if="configVisible"
       :visible.sync="configVisible"
-      :close-on-click-modal="false"
-      :close-on-press-escape="false">
-      <sib-form
-        cancel-text="取消"
-        :item-info="configItemInfo"
-        :form="configForm"
-        @submit="handlerSubmitConfig"
-        @reset="configVisible = false">
-        <template
-          v-for="code in ['continuity', 'additional']"
-          #[code]>
-          <sib-table
-            size="mini"
-            border
-            stripe
-            :ref="code"
-            :key="code"
-            :page-sizes="[5, 10]"
-            :page-size="5"
-            :is-pagination="!!configTableDatas[code].length"
-            :table-column="configTableColumn"
-            :table-data="configTableDatas[code]">
-            <template #content-body>
-              <el-button
-                size="mini"
-                type="primary"
-                icon="el-icon-plus"
-                @click.native="handlerAddRule(code)">
-                新增规则
-              </el-button>
-            </template>
-            <template #days="{ row }">
-              <sib-item
-                v-model="row.days"
-                :props="configDaysProps" />
-            </template>
-            <template #score="{ row }">
-              <sib-item
-                v-model="row.score"
-                :props="configPointsProps" />
-            </template>
-            <!-- :disabled="configTableDatas[code].length < 2" -->
-            <template #operate="{ realIndex }">
-              <el-button
-                type="text"
-                @click.native="handlerDelete(realIndex, code)">
-                删除
-              </el-button>
-            </template>
-          </sib-table>
-        </template>
-      </sib-form>
-    </el-dialog>
+      :data="currentRow"
+      @submit-success="handlerSubmitConfigSuccess" />
     <el-dialog
       class="center"
       width="500px"
@@ -173,9 +116,11 @@
 </template>
 
 <script>
+import activeConfig from '@/components/active-config';
 
 export default {
     name: 'ActiveManage',
+    components: { activeConfig },
     data() {
         return {
             isLoading: false,
@@ -271,99 +216,6 @@ export default {
             ],
             settingForm: {},
             configVisible: false,
-            configItemInfo: [
-                {
-                    label: '默认奖励',
-                    code: 'score',
-                    type: 'number',
-                    unit: '积分',
-                    width: '45%',
-                    required: true,
-                    min: 0,
-                    precision: 0,
-                    controls: false,
-                },
-                {
-                    label: '连续签到',
-                    code: 'continuity',
-                    type: 'slot',
-                },
-                {
-                    label: '额外奖励',
-                    code: 'additional',
-                    type: 'slot',
-                },
-                {
-                    label: '连续签到',
-                    placeholder: '请输入',
-                    code: 'days',
-                    type: 'number',
-                    unit: '天',
-                    width: 'calc(33% - 10px)',
-                    min: 0,
-                    precision: 0,
-                    controls: false,
-                },
-                {
-                    label: '后， 每连续签到',
-                    placeholder: '请输入',
-                    code: 'over',
-                    type: 'number',
-                    unit: '天',
-                    width: 'calc(33% - 10px)',
-                    min: 0,
-                    precision: 0,
-                    controls: false,
-                },
-                {
-                    label: '将额外奖励 ',
-                    placeholder: '请输入',
-                    code: 'continuityScore',
-                    type: 'number',
-                    unit: '积分',
-                    width: 'calc(33% - 10px)',
-                    min: 0,
-                    precision: 0,
-                    controls: false,
-                },
-            ],
-            configForm: {},
-            configTableColumn: [
-                {
-                    label: '连续签到天数',
-                    code: 'days',
-                    type: 'slot',
-                },
-                {
-                    label: '奖励积分数量',
-                    code: 'score',
-                    type: 'slot',
-                },
-                {
-                    label: '操作',
-                    code: 'operate',
-                    type: 'slot',
-                    width: 80,
-                },
-            ],
-            configTableDatas: {
-                continuity: [],
-                additional: [],
-            },
-            configDaysProps: {
-                type: 'number',
-                unit: '天',
-                min: 0,
-                precision: 0,
-                controls: false,
-            },
-            configPointsProps: {
-                type: 'number',
-                unit: '积分',
-                min: 0,
-                precision: 0,
-                controls: false,
-            },
             explainVisible: false,
             currentRow: {},
         };
@@ -416,22 +268,6 @@ export default {
                 if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
             }).finally(cb);
         },
-        handlerConfig(row) {
-            this.currentRow = row;
-            const activityConfig = JSON.parse(row.activityCfg || '{}');
-            const cumulative = activityConfig.cumulative || {};
-            this.configForm = {
-                ...activityConfig,
-                days: cumulative.days || '',
-                over: cumulative.over || '',
-                continuityScore: cumulative.score || '',
-            };
-            this.configTableDatas = {
-                additional: activityConfig.additional || [],
-                continuity: activityConfig.continuity || [],
-            };
-            this.configVisible = true;
-        },
         handlerSubmitSetting(form, cb) {
             this.$http.post('/activitySet/update', form).then(() => {
                 this.$message.success('保存成功');
@@ -439,21 +275,13 @@ export default {
                 this.getSetting();
             }).finally(cb);
         },
-        handlerAddRule(code) {
-            this.configTableDatas[code].push({});
+        handlerConfig(row) {
+            this.currentRow = row;
+            this.configVisible = true;
         },
-        handlerDelete(index, code) {
-            this.configTableDatas[code].splice(index, 1);
-        },
-        handlerSubmitConfig(form, cb) {
-            this.$http.post('/activity/config', {
-                activityId: this.currentRow.id,
-                activityCfg: JSON.stringify(form),
-            }).then(() => {
-                this.$message.success('保存成功');
-                this.configVisible = false;
-                if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
-            }).finally(cb);
+        handlerSubmitConfigSuccess() {
+            this.configVisible = false;
+            if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
         },
         handlerViewExplain(row) {
             if (!row.activityDesc) return;

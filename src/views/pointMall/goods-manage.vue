@@ -162,9 +162,6 @@
         @submit="handlerSubmitPhoto"
         @reset="photoConfig.visible = false">
         <template #files="{ form }">
-          <img
-            :src="form.filePath"
-            alt="">
           <div
             class="image-box"
             v-if="currentFilePath || form.filePath">
