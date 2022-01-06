@@ -252,7 +252,7 @@ export default {
             settingItemInfo: [
                 {
                     label: '每日积分封顶（个人）',
-                    code: '1',
+                    code: 'scoreMaxPerson',
                     type: 'text',
                     valueType: 'number',
                     maxlength: 10,
@@ -261,7 +261,7 @@ export default {
                 },
                 {
                     label: '每日积分封顶（平台）',
-                    code: '2',
+                    code: 'scoreMaxCompany',
                     type: 'text',
                     valueType: 'number',
                     maxlength: 10,
@@ -370,9 +370,13 @@ export default {
     },
     methods: {
         getSetting() {
-            // this.$http.post('url').then((res) => {
-            //     this.settingForm = res && res.data && res.data.data || {};
-            // });
+            this.$http.post('/activitySet/list').then((res) => {
+                const { scoreMaxPerson, scoreMaxCompany } = (res && res.data && res.data.data || [])[0] || {};
+                this.settingForm = {
+                    scoreMaxPerson: String(scoreMaxPerson || 0),
+                    scoreMaxCompany: String(scoreMaxCompany || 0),
+                };
+            });
         },
         // 启用/禁用
         handlerEnable(row, enabled) {
@@ -429,9 +433,10 @@ export default {
             this.configVisible = true;
         },
         handlerSubmitSetting(form, cb) {
-            this.$http.post('url', form).then(() => {
+            this.$http.post('/activitySet/update', form).then(() => {
                 this.$message.success('保存成功');
                 this.settingVisible = false;
+                this.getSetting();
             }).finally(cb);
         },
         handlerAddRule(code) {
@@ -441,7 +446,6 @@ export default {
             this.configTableDatas[code].splice(index, 1);
         },
         handlerSubmitConfig(form, cb) {
-            console.log('form', form);
             this.$http.post('/activity/config', {
                 activityId: this.currentRow.id,
                 activityCfg: JSON.stringify(form),
