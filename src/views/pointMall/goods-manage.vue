@@ -66,7 +66,8 @@
       :width="dialogTab === 'detail' ? '500px' : '800px'"
       :visible.sync="detailVisible"
       :close-on-click-modal="false"
-      :close-on-press-escape="false">
+      :close-on-press-escape="false"
+      @close="dialogTab = 'detail'">
       <el-tabs
         v-model="dialogTab">
         <el-tab-pane
@@ -164,10 +165,10 @@
         <template #files="{ form }">
           <div
             class="image-box"
-            v-if="currentFilePath || form.filePath">
+            v-if="getPreviewPath(form.filePath)">
             <el-image
-              :src="currentFilePath || form.filePath"
-              :preview-src-list="[currentFilePath || form.filePath]" />
+              :src="getPreviewPath(form.filePath)"
+              :preview-src-list="[getPreviewPath(form.filePath)]" />
             <i
               class="el-icon-error"
               @click="handlerRemoveImage" />
@@ -555,6 +556,9 @@ export default {
         };
     },
     methods: {
+        getPreviewPath(path) {
+            return this.currentFilePath || (path ? `${this.$host}${path}` : '');
+        },
         handlerViewDetail(row) {
             row.exchangeDate = [row.exchangeBeginDate || '', row.exchangeEndDate || ''];
             this.currrentRow = row;
@@ -640,12 +644,10 @@ export default {
         },
         handlerEditPhoto(row) {
             const { addItemInfo, editItemInfo } = this.photoConfig;
-            const filePath = row.filePath ? `/product/images/${row.filePath}` : '';
             this.photoConfig.title = '编辑';
             this.photoConfig.type = 'update';
             this.photoConfig.itemInfo = editItemInfo && editItemInfo.length ? editItemInfo : (addItemInfo || []);
             this.photoConfig.form = JSON.parse(JSON.stringify(row));
-            this.photoConfig.form.filePath = filePath;
             this.photoConfig.visible = true;
             this.currentFilePath = '';
         },
@@ -704,7 +706,7 @@ export default {
             return new File([blob], `商品图片${(new Date()).getTime()}.${imageType}`);
         },
         handlerDownloadPhoto({ filePath, fileOriginalName }) {
-            if (filePath) window.download(`/product/images/${filePath}`, fileOriginalName || 'pic.jpg');
+            if (filePath) window.download(`${this.$host}${filePath}`, fileOriginalName || `商品图片${(new Date()).getTime()}.jpg`);
         },
     },
 };

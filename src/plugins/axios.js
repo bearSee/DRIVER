@@ -7,7 +7,8 @@ import errorCode from '@/utils/error-code';
 let loading = null;
 let messageBox = null;
 
-const baseURL = 'http://47.107.151.192:28092/dhssys/';
+const host = 'http://47.107.151.192:28092';
+const baseURL = `${host}/dhssys/`;
 
 const axiosConfig = {
     baseURL,
@@ -102,3 +103,4 @@ Axios.interceptors.response.use(
 
 window.axios = Axios;
 Vue.prototype.$http = Axios;
+Vue.prototype.$host = host;
