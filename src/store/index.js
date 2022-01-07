@@ -25,13 +25,6 @@ const store = new Vuex.Store({
         },
     },
     actions: {
-        getUserInfo({ commit }) {
-            return new Promise((resolve) => {
-                Vue.prototype.$http.get('/edc-user-service/user/currentUser').then((res) => {
-                    commit('replaceUserInfo', (res && res.data || {}).data || {});
-                }).finally(resolve);
-            });
-        },
     },
     strict: debug,
 });
