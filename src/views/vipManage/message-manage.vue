@@ -395,6 +395,9 @@ export default {
                 cb();
                 return;
             }
+            if (form.sendUsersName && typeof form.sendUsersName === 'string') {
+                form.sendUsersName = form.sendUsersName.split(',');
+            }
             const { type } = this.dialogConfig;
             const url = `/message/${type}`;
 
