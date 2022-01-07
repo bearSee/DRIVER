@@ -88,6 +88,7 @@ Axios.interceptors.response.use(
         if (['10000'].includes(String(code))) {
             // 清除相关菜单权限
             store.commit('clearPermissions');
+            Vue.prototype.$router.push('/login');
             window.location.replace('/#/login');
         }
 

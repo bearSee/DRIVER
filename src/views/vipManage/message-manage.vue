@@ -34,6 +34,7 @@
       <template #operate="{ row }">
         <el-button
           type="text"
+          :disabled="String(row.status) === '1'"
           @click.native="handlerEdit(row)">
           编辑
         </el-button>
@@ -57,10 +58,12 @@
       :close-on-click-modal="false"
       :close-on-press-escape="false">
       <sib-form
+        ref="dialogFrom"
         submit-text="保存"
         cancel-text="取消"
         :item-info="dialogConfig.itemInfo"
         :form="dialogConfig.form"
+        @form-item-change="formItemChange"
         @submit="handlerSubmit"
         @reset="dialogConfig.visible = false"
       />
@@ -85,6 +88,90 @@
 </template>
 
 <script>
+const sendLabel = {
+    label: '发送会员标签',
+    code: 'sendLabel',
+    type: 'select',
+    options: [],
+    optionProps: {
+        key: 'dicKey',
+        value: 'dicValue',
+    },
+    requestConfig: {
+        url: '/dict/select/list/USER_LABEL',
+        method: 'get',
+        params: {},
+        callback: res => (res.data || {}).list || [],
+    },
+    required: true,
+};
+const sendUsers = {
+    label: '会员列表',
+    code: 'sendUsers',
+    showCode: 'sendUsersName',
+    type: 'table',
+    tableConfig: {
+        multiple: true,
+        query: [
+            {
+                label: '人员类型',
+                code: 'userType',
+                type: 'select',
+                options: [],
+                optionProps: {
+                    key: 'dicKey',
+                    value: 'dicValue',
+                },
+                requestConfig: {
+                    url: '/dict/select/list/USER_TYPE',
+                    method: 'get',
+                    params: {},
+                    callback: res => (res.data || {}).list || [],
+                },
+            },
+            {
+                label: '公司/平台',
+                code: 'company',
+                type: 'text',
+            },
+        ],
+        field: [
+            {
+                label: '真实姓名',
+                code: 'userName',
+            },
+            {
+                label: '人员类型',
+                code: 'userTypeName',
+            },
+            {
+                label: '手机号码',
+                code: 'mobile',
+            },
+        ],
+    },
+    trans: [
+        {
+            from: 'id',
+            to: 'sendUsers',
+        },
+        {
+            from: 'userName',
+            to: 'sendUsersName',
+        },
+    ],
+    requestConfig: {
+        url: '/user/queryPage',
+        method: 'post',
+        params: {},
+        pageParamKeys: {
+            pageIndex: 'page',
+            pageSize: 'limit',
+        },
+        callback: res => ((res && res.data || {}).page || {}).list || [],
+    },
+    required: true,
+};
 
 export default {
     name: 'MessageManage',
@@ -142,7 +229,7 @@ export default {
                 },
                 {
                     label: '创建人',
-                    code: 'sendUsers',
+                    code: 'createdUserName',
                 },
                 {
                     label: '创建时间',
@@ -213,27 +300,20 @@ export default {
                         required: true,
                     },
                     {
+                        label: '发送时间',
+                        labelTips: '请控制您所设置的 “发送时间“ 距离当前时间至少 3 分钟',
+                        type: 'datetime',
+                        code: 'sendDt',
+                        pickerOptions: {
+                            disabledDate: date => date.getTime() <= (new Date().getTime() - 24 * 3600 * 1000),
+                        },
+                        required: true,
+                    },
+                    {
                         label: '消息内容',
                         code: 'content',
                         type: 'textarea',
                         maxlength: 500,
-                        required: true,
-                    },
-                    {
-                        label: '发送会员标签',
-                        code: 'sendLabel',
-                        type: 'select',
-                        options: [],
-                        optionProps: {
-                            key: 'dicKey',
-                            value: 'dicValue',
-                        },
-                        requestConfig: {
-                            url: '/dict/select/list/USER_LABEL',
-                            method: 'get',
-                            params: {},
-                            callback: res => (res.data || {}).list || [],
-                        },
                         required: true,
                     },
                 ],
@@ -271,11 +351,43 @@ export default {
             this.dialogConfig.title = '编辑';
             this.dialogConfig.type = 'update';
             this.dialogConfig.itemInfo = editItemInfo && editItemInfo.length ? editItemInfo : (addItemInfo || []);
+            this.formItemChange(row.sendRange, { code: 'sendRange' });
             this.dialogConfig.form = JSON.parse(JSON.stringify(row));
+            if (row.sendUsersName) this.dialogConfig.form.sendUsersName = row.sendUsersName.join();
             this.dialogConfig.visible = true;
+        },
+        formItemChange(val, { code }) {
+            if (code === 'sendRange') {
+                const itemInfo = window.deepCopy(this.dialogConfig.itemInfo);
+
+                const lindex = this.dialogConfig.itemInfo.findIndex(item => item.code === 'sendLabel');
+                if (val === 'MSG_SEND_RANGE_SIGN') {
+                    if (lindex < 0) itemInfo.push(sendLabel);
+                } else if (lindex > -1) {
+                    itemInfo.splice(lindex, 1);
+                }
+
+                const uindex = this.dialogConfig.itemInfo.findIndex(item => item.code === 'sendUsers');
+                if (val === 'MSG_SEND_RANGE_SET') {
+                    if (uindex < 0) itemInfo.push(sendUsers);
+                } else if (uindex > -1) {
+                    itemInfo.splice(uindex, 1);
+                }
+
+                this.dialogConfig.itemInfo = itemInfo;
+                this.$nextTick(() => {
+                    this.$refs.dialogFrom.reSetFormItemWidth();
+                });
+            }
         },
         // 创建、编辑用户提交
         handlerSubmit(form, cb) {
+            const sendDt = new Date(form.sendDt).getTime();
+            if (sendDt < (new Date().getTime() + 3 * 60 * 1000)) {
+                this.$message.warning('请控制您所设置的 “发送时间“ 距离当前时间至少 3 分钟');
+                cb();
+                return;
+            }
             const { type } = this.dialogConfig;
             const url = `/message/${type}`;
 
@@ -289,7 +401,12 @@ export default {
             this.currentRow = row;
             this.messageVisible = true;
         },
-        handlerExport() {},
+        handlerExport() {
+            this.$http.post('/message/exportExcel', this.$qs.stringify(this.$refs.sibTable.searchParams), { responseType: 'blob' }).then((res) => {
+                window.download(res);
+                this.$message.success('导出成功');
+            });
+        },
     },
 };
 </script>

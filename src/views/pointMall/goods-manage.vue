@@ -220,7 +220,7 @@ export default {
             searchInfos: {
                 goodsType: [
                     {
-                        label: '商品类型',
+                        label: '商品类型名称',
                         code: 'categoryName',
                         type: 'text',
                     },
@@ -241,7 +241,7 @@ export default {
                             value: 'categoryName',
                         },
                         requestConfig: {
-                            url: '/product/info/queryPage',
+                            url: '/product/category/queryPage',
                             method: 'post',
                             params: { page: 1, limit: 999 },
                             callback: res => ((res.data || {}).page || {}).list || [],
@@ -303,6 +303,10 @@ export default {
                     {
                         label: '商品名称',
                         code: 'productName',
+                    },
+                    {
+                        label: '商品类别',
+                        code: 'categoryName',
                     },
                     {
                         label: '商品详情',
@@ -378,6 +382,11 @@ export default {
                             required: true,
                         },
                         {
+                            label: '商品描述',
+                            code: 'productDesc',
+                            type: 'textarea',
+                        },
+                        {
                             label: '数量',
                             code: 'productNum',
                             type: 'number',
@@ -385,11 +394,11 @@ export default {
                         },
                         {
                             label: '商品类型',
-                            code: 'categoryCode',
+                            code: 'productCategoryId',
                             type: 'select',
                             options: [],
                             optionProps: {
-                                key: 'categoryCode',
+                                key: 'id',
                                 value: 'categoryName',
                             },
                             requestConfig: {
@@ -399,6 +408,7 @@ export default {
                                 callback: res => ((res.data || {}).page || {}).list || [],
                                 stringify: true,
                             },
+                            required: true,
                         },
                         {
                             label: '是否推荐',
@@ -554,6 +564,11 @@ export default {
             currentImage: '',
             currentFilePath: '',
         };
+    },
+    watch: {
+        pageType() {
+            if (this.$refs.sibTable) this.$refs.sibTable.searchForm = {};
+        },
     },
     methods: {
         getPreviewPath(path) {

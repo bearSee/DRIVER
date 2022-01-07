@@ -51,9 +51,10 @@
       :visible.sync="detailVisible"
       :close-on-click-modal="false"
       :close-on-press-escape="false">
-      <div class="image-box">
+      <div
+        class="image-box"
+        v-if="currrentRow.filePath">
         <el-image
-          v-if="currrentRow.filePath"
           :src="currrentRow.filePath"
           :preview-src-list="[currrentRow.filePath]" />
       </div>

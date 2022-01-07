@@ -29,6 +29,7 @@
 </template>
 
 <script>
+import { mapMutations } from 'vuex';
 
 export default {
     name: 'Master',
@@ -90,12 +91,14 @@ export default {
         };
     },
     methods: {
+        ...mapMutations(['clearPermissions']),
         handlerSelect({ key }) {
             if (this[key]) this[key]();
         },
         handlerLoginOut() {
             const loading = this.loadingBox('正在退出登录...');
-            this.$http.get('/edc-auth/logout').then(() => {
+            this.$http.post('/init/logout').then(() => {
+                this.$router.push('/login');
                 window.location.replace('/#/login');
                 window.location.reload();
                 // 清除相关菜单权限及用户信息

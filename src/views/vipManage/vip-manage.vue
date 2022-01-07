@@ -229,30 +229,6 @@ export default {
                         maxlength: 30,
                         required: true,
                     },
-                    // {
-                    //     label: '人员类型',
-                    //     code: 'userType',
-                    //     type: 'select',
-                    //     options: [],
-                    //     optionProps: {
-                    //         key: 'dicKey',
-                    //         value: 'dicValue',
-                    //     },
-                    //     requestConfig: {
-                    //         url: '/dict/select/list/USER_TYPE',
-                    //         method: 'get',
-                    //         params: {},
-                    //         callback: res => (res.data || {}).list || [],
-                    //     },
-                    //     required: true,
-                    // },
-                    // {
-                    //     label: '手机号码',
-                    //     code: 'mobile',
-                    //     type: 'text',
-                    //     valueType: 'number',
-                    //     required: true,
-                    // },
                     {
                         label: '身份证号码',
                         code: 'identityNo',
@@ -263,13 +239,6 @@ export default {
                         label: '车牌号码',
                         code: 'vehicleNo',
                         type: 'text',
-                        required: true,
-                    },
-                    {
-                        label: '积分',
-                        code: 'score',
-                        type: 'text',
-                        valueType: 'number',
                         required: true,
                     },
                     {
@@ -496,7 +465,13 @@ export default {
                 if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
             }).finally(cb);
         },
-        handlerExport() {},
+        handlerExport() {
+            this.$http.post('/user/exportExcel', this.$qs.stringify(this.$refs.sibTable.searchParams), { responseType: 'blob' }).then((res) => {
+                window.download(res);
+                console.log('res', res);
+                this.$message.success('导出成功');
+            });
+        },
     },
 };
 </script>
