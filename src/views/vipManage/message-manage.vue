@@ -347,14 +347,21 @@ export default {
         },
         // 打开编辑弹窗
         handlerEdit(row) {
-            const { addItemInfo, editItemInfo } = this.dialogConfig;
-            this.dialogConfig.title = '编辑';
-            this.dialogConfig.type = 'update';
-            this.dialogConfig.itemInfo = editItemInfo && editItemInfo.length ? editItemInfo : (addItemInfo || []);
-            this.formItemChange(row.sendRange, { code: 'sendRange' });
-            this.dialogConfig.form = JSON.parse(JSON.stringify(row));
-            if (row.sendUsersName) this.dialogConfig.form.sendUsersName = row.sendUsersName.join();
-            this.dialogConfig.visible = true;
+            this.$http.post('/message/findUserByRange', this.$qs.stringify({ messageId: row.id })).then((res) => {
+                res = res && res.data && res.data.data || {};
+                const data = {
+                    ...row,
+                    sendUsers: res.sendUsers,
+                    sendUsersName: (res.sendUsersName || []).join(),
+                };
+                const { addItemInfo, editItemInfo } = this.dialogConfig;
+                this.dialogConfig.title = '编辑';
+                this.dialogConfig.type = 'update';
+                this.dialogConfig.itemInfo = editItemInfo && editItemInfo.length ? editItemInfo : (addItemInfo || []);
+                this.formItemChange(data.sendRange, { code: 'sendRange' });
+                this.dialogConfig.form = JSON.parse(JSON.stringify(data));
+                this.dialogConfig.visible = true;
+            });
         },
         formItemChange(val, { code }) {
             if (code === 'sendRange') {
@@ -376,7 +383,7 @@ export default {
 
                 this.dialogConfig.itemInfo = itemInfo;
                 this.$nextTick(() => {
-                    this.$refs.dialogFrom.reSetFormItemWidth();
+                    if (this.$refs.dialogFrom) this.$refs.dialogFrom.reSetFormItemWidth();
                 });
             }
         },
