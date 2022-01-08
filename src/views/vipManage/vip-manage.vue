@@ -467,7 +467,7 @@ export default {
         },
         handlerExport() {
             this.$http.post('/user/exportExcel', this.$qs.stringify(this.$refs.sibTable.searchParams), { responseType: 'blob' }).then((res) => {
-                window.download(res);
+                window.download(res, '会员信息.xlsx');
                 console.log('res', res);
                 this.$message.success('导出成功');
             });

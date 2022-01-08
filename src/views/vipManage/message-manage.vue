@@ -413,7 +413,7 @@ export default {
         },
         handlerExport() {
             this.$http.post('/message/exportExcel', this.$qs.stringify(this.$refs.sibTable.searchParams), { responseType: 'blob' }).then((res) => {
-                window.download(res);
+                window.download(res, '消息列表.xlsx');
                 this.$message.success('导出成功');
             });
         },
