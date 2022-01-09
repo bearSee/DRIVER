@@ -1,3 +1,11 @@
+/*
+ * @Author: 熊望
+ * @Date: 2022-01-07 23:07:13
+ * @LastEditors: 熊望
+ * @LastEditTime: 2022-01-09 18:53:28
+ * @FilePath: /nginx/Users/bear/projects/project-bear/DRIVER/src/store/index.js
+ * @Description:
+ */
 import Vue from 'vue';
 import Vuex from 'vuex';
 

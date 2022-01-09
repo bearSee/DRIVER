@@ -1,14 +1,15 @@
 import Vue from 'vue';
 import axios from 'axios';
 import formatDate from 'sibionics-ui/src/filters/formatDate';
+import router from '../router';
 import store from '@/store';
 import errorCode from '@/utils/error-code';
 
 let loading = null;
 let messageBox = null;
 
-// const host = 'http://47.107.151.192:28092';
-const host = `${window.location.origin}${window.location.pathname}`;
+const host = 'http://47.107.151.192:28092/';
+// const host = `${window.location.origin}${window.location.pathname}`;
 const baseURL = `${host}dhssys/`;
 
 const axiosConfig = {
@@ -23,7 +24,7 @@ Axios.interceptors.request.use(
         const timeStamp = formatDate(new Date(), 'YYYYMMDDhhmmss');
         config.headers = {
             ...config.headers,
-            Authorization: window.localStorage.getItem('Authorization'),
+            Authorization: window.localStorage.getItem('Authorization') || '',
         };
         // get请求增加时间戳，避免服务器304
         if (config.method === 'get') {
@@ -89,8 +90,9 @@ Axios.interceptors.response.use(
         if (['10000'].includes(String(code))) {
             // 清除相关菜单权限
             store.commit('clearPermissions');
-            Vue.prototype.$router.push('/login');
-            window.location.replace('/#/login');
+            router.push('/login');
+            const root = `${window.location.protocol}//${window.location.host}`;
+            window.location.replace(`${root}/#/login`);
         }
 
         return Promise.reject(res);

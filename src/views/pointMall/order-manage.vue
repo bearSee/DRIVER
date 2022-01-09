@@ -28,13 +28,13 @@
       <template #operate="{ row }">
         <el-button
           type="text"
-          :disabled="row.orderStatus === 'ORDER_STATUS_FINISH'"
+          :disabled="row.orderStatus !== 'ORDER_STATUS_NEW'"
           @click.native="handlerChangeStatus(row, 'ORDER_STATUS_FINISH')">
           已完成
         </el-button>
         <el-button
           type="text"
-          :disabled="row.orderStatus === 'ORDER_STATUS_CANCELED'"
+          :disabled="row.orderStatus !== 'ORDER_STATUS_APPLY_CANCEL'"
           @click.native="handlerChangeStatus(row, 'ORDER_STATUS_CANCELED')">
           确认取消
         </el-button>
