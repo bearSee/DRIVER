@@ -29,13 +29,13 @@
         <el-button
           type="text"
           :disabled="row.orderStatus !== 'ORDER_STATUS_NEW'"
-          @click.native="handlerChangeStatus(row, 'ORDER_STATUS_FINISH')">
+          @click.native="handlerChangeStatus(row, 'finish')">
           已完成
         </el-button>
         <el-button
           type="text"
           :disabled="row.orderStatus !== 'ORDER_STATUS_APPLY_CANCEL'"
-          @click.native="handlerChangeStatus(row, 'ORDER_STATUS_CANCELED')">
+          @click.native="handlerChangeStatus(row, 'cancel')">
           确认取消
         </el-button>
       </template>
@@ -221,13 +221,28 @@ export default {
                 if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
             });
         },
-        handlerChangeStatus(row, orderStatus) {
-            this.isLoading = true;
-            this.$http.post('/order/updateStatus', this.$qs.stringify({ orderId: row.id, orderStatus })).then(() => {
-                this.$message.success('操作成功');
-                if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
-            }).finally(() => {
-                this.isLoading = false;
+        handlerChangeStatus({ id }, type) {
+            const obj = {
+                finish: {
+                    url: '/order/finish',
+                    message: '是否已完成？',
+                },
+                cancel: {
+                    url: '/order/cancelConfirm',
+                    message: '是否确认取消？',
+                },
+            };
+            const { message, url } = obj[type];
+            this.$confirm(message, '温馨提示', {
+                type: 'warning',
+            }).then(() => {
+                this.isLoading = true;
+                this.$http.post(url, this.$qs.stringify({ orderId: id })).then(() => {
+                    this.$message.success('操作成功');
+                    if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
+                }).finally(() => {
+                    this.isLoading = false;
+                });
             });
         },
     },
