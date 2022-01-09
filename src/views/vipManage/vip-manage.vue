@@ -200,7 +200,7 @@ export default {
                 },
                 {
                     label: '对应标签',
-                    code: 'labelName',
+                    code: 'label',
                 },
                 {
                     label: '操作',
@@ -257,18 +257,19 @@ export default {
                     {
                         label: '对应标签',
                         code: 'label',
-                        type: 'select',
-                        options: [],
-                        optionProps: {
-                            key: 'dicKey',
-                            value: 'dicValue',
-                        },
-                        requestConfig: {
-                            url: '/dict/select/list/USER_LABEL',
-                            method: 'get',
-                            params: {},
-                            callback: res => (res.data || {}).list || [],
-                        },
+                        type: 'text',
+                        // type: 'select',
+                        // options: [],
+                        // optionProps: {
+                        //     key: 'dicKey',
+                        //     value: 'dicValue',
+                        // },
+                        // requestConfig: {
+                        //     url: '/dict/select/list/USER_LABEL',
+                        //     method: 'get',
+                        //     params: {},
+                        //     callback: res => (res.data || {}).list || [],
+                        // },
                         required: true,
                     },
                 ],
