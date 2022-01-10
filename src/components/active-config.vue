@@ -112,7 +112,7 @@ export default {
                     {
                         label: '连续签到',
                         placeholder: '请输入',
-                        code: 'ruleDays',
+                        code: 'ruleOver',
                         unit: '天',
                         width: 'calc(33% - 10px)',
                         ...numberProps,
@@ -120,7 +120,7 @@ export default {
                     {
                         label: '后， 每连续签到',
                         placeholder: '请输入',
-                        code: 'ruleOver',
+                        code: 'ruleDays',
                         unit: '天',
                         width: 'calc(33% - 10px)',
                         ...numberProps,
@@ -156,7 +156,7 @@ export default {
                     {
                         label: '累计邀请超过',
                         placeholder: '请输入',
-                        code: 'ruleDays',
+                        code: 'ruleOver',
                         unit: '人',
                         width: 'calc(33% - 10px)',
                         ...numberProps,
@@ -164,7 +164,7 @@ export default {
                     {
                         label: '后， 每邀请',
                         placeholder: '请输入',
-                        code: 'ruleOver',
+                        code: 'ruleNumber',
                         unit: '人',
                         width: 'calc(33% - 10px)',
                         ...numberProps,
@@ -280,10 +280,10 @@ export default {
                 },
                 // 邀请活动
                 ACTIVITY_INVITATION: (config) => {
-                    const { days, over, score } = config.cumulative || {};
+                    const { number, over, score } = config.cumulative || {};
                     this.configForm = {
                         ...config,
-                        ruleDays: days,
+                        ruleNumber: number,
                         ruleOver: over,
                         ruleScore: score,
                     };
@@ -413,6 +413,7 @@ export default {
                     ...(this.configTableDatas[this.activityType] || {}),
                     cumulative: {
                         days: form.ruleDays || 0,
+                        number: form.ruleNumber || 0,
                         over: form.ruleOver || 0,
                         score: form.ruleScore || 0,
                     },
