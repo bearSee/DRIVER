@@ -13,7 +13,7 @@
     "core-js": "^2.6.12",
     "cropperjs": "^1.5.12",
     "crypto-js": "^4.0.0",
-    "sibionics-ui": "^1.1.37",
+    "sibionics-ui": "^1.1.38",
     "vue": "^2.6.6",
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1"
