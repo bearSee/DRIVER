@@ -572,7 +572,7 @@ export default {
     },
     methods: {
         getPreviewPath(path) {
-            return this.currentFilePath || (path ? `${this.$host}${path}` : '');
+            return this.currentFilePath || path || '';
         },
         handlerViewDetail(row) {
             row.exchangeDate = [row.exchangeBeginDate || '', row.exchangeEndDate || ''];
@@ -721,7 +721,7 @@ export default {
             return new File([blob], `商品图片${(new Date()).getTime()}.${imageType}`);
         },
         handlerDownloadPhoto({ filePath, fileOriginalName }) {
-            if (filePath) window.download(`${this.$host}${filePath}`, fileOriginalName || `商品图片${(new Date()).getTime()}.jpg`);
+            if (filePath) window.download(filePath, fileOriginalName || `商品图片${(new Date()).getTime()}.jpg`);
         },
     },
 };
