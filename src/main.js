@@ -8,7 +8,7 @@
  */
 import Vue from 'vue';
 // 引入 sibionics-ui
-import sibUI from 'sibionics-ui/src';
+import sibUI from 'sibionics-ui';
 // 引入样式表
 import 'sibionics-ui/lib/sibionics.css';
 import App from './App';
