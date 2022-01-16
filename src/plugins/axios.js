@@ -8,9 +8,11 @@ import errorCode from '@/utils/error-code';
 let loading = null;
 let messageBox = null;
 
+const host = 'http://szift.szft.net.cn/driver-home-admin/';
 // const host = 'http://47.107.151.192:28092/';
-const host = `${window.location.origin}${window.location.pathname}`;
-const baseURL = `${host}dhssys/`;
+// const host = `${window.location.origin}${window.location.pathname}`;
+// const baseURL = `${host}dhssys/`;
+const baseURL = host;
 
 const axiosConfig = {
     baseURL,
