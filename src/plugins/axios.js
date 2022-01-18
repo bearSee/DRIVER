@@ -8,9 +8,11 @@ import errorCode from '@/utils/error-code';
 let loading = null;
 let messageBox = null;
 
+const host = `${window.location.protocol}//szift.szft.net.cn/driver-home-admin/`;
+const baseURL = host;
 // const host = 'http://47.107.151.192:28092/';
-const host = `${window.location.origin}${window.location.pathname}`;
-const baseURL = `${host}dhssys/`;
+// const host = `${window.location.origin}${window.location.pathname}`;
+// const baseURL = `${host}dhssys/`;
 
 const axiosConfig = {
     baseURL,
@@ -91,8 +93,6 @@ Axios.interceptors.response.use(
             // 清除相关菜单权限
             store.commit('clearPermissions');
             router.push('/login');
-            const root = `${window.location.protocol}//${window.location.host}`;
-            window.location.replace(`${root}/#/login`);
         }
 
         return Promise.reject(res);

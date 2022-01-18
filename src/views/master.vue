@@ -63,7 +63,7 @@ export default {
                     ],
                 },
                 {
-                    name: '车友活动',
+                    name: '积分活动',
                     icon: 'el-icon-menu',
                     children: [
                         {
