@@ -10,8 +10,8 @@ let messageBox = null;
 
 const host = `${window.location.protocol}//szift.szft.net.cn/driver-home-admin/`;
 const baseURL = host;
-// const host = 'http://47.107.151.192:28092/';
 // const host = `${window.location.origin}${window.location.pathname}`;
+// const host = 'http://47.107.151.192:28092/';
 // const baseURL = `${host}dhssys/`;
 
 const axiosConfig = {
