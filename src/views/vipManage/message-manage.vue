@@ -91,17 +91,49 @@
 const sendLabel = {
     label: '发送会员标签',
     code: 'sendLabel',
-    type: 'select',
-    options: [],
-    optionProps: {
-        key: 'dicKey',
-        value: 'dicValue',
+    showCode: 'sendLabelName',
+    type: 'table',
+    dataType: 'array',
+    tableConfig: {
+        multiple: true,
+        rowSize: 2,
+        pageParamKeys: {
+            pageIndex: 'page',
+            pageSize: 'limit',
+        },
+        query: [
+            {
+                label: '标签名称',
+                code: 'labelName',
+                type: 'text',
+            },
+        ],
+        field: [
+            {
+                label: '标签名称',
+                code: 'labelName',
+            },
+        ],
     },
+    trans: [
+        {
+            from: 'id',
+            to: 'sendLabel',
+        },
+        {
+            from: 'labelName',
+            to: 'sendLabelName',
+        },
+    ],
     requestConfig: {
-        url: '/dict/select/list/USER_LABEL',
-        method: 'get',
+        url: '/label/queryPage',
+        method: 'post',
         params: {},
-        callback: res => (res.data || {}).list || [],
+        pageParamKeys: {
+            pageIndex: 'page',
+            pageSize: 'limit',
+        },
+        callback: res => ((res && res.data || {}).page || {}).list || [],
     },
     required: true,
 };
@@ -110,8 +142,15 @@ const sendUsers = {
     code: 'sendUsers',
     showCode: 'sendUsersName',
     type: 'table',
+    dataType: 'array',
+    pickerWidth: '1000px',
     tableConfig: {
         multiple: true,
+        rowSize: 3,
+        pageParamKeys: {
+            pageIndex: 'page',
+            pageSize: 'limit',
+        },
         query: [
             {
                 label: '人员类型',
@@ -143,6 +182,10 @@ const sendUsers = {
             {
                 label: '人员类型',
                 code: 'userTypeName',
+            },
+            {
+                label: '公司/平台',
+                code: 'company',
             },
             {
                 label: '手机号码',
@@ -353,6 +396,8 @@ export default {
                     ...row,
                     sendUsers: res.sendUsers,
                     sendUsersName: (res.sendUsersName || []).join(),
+                    sendLabel: res.sendLabel,
+                    sendLabelName: (res.sendLabelName || []).join(),
                 };
                 const { addItemInfo, editItemInfo } = this.dialogConfig;
                 this.dialogConfig.title = '编辑';
@@ -366,12 +411,14 @@ export default {
         formItemChange(val, { code }) {
             if (code === 'sendRange') {
                 const itemInfo = window.deepCopy(this.dialogConfig.itemInfo);
+                const { currentForm = {} } = this.$refs.dialogFrom || {};
 
                 const lindex = this.dialogConfig.itemInfo.findIndex(item => item.code === 'sendLabel');
                 if (val === 'MSG_SEND_RANGE_SIGN') {
                     if (lindex < 0) itemInfo.push(sendLabel);
                 } else if (lindex > -1) {
                     itemInfo.splice(lindex, 1);
+                    this.$set(currentForm, 'sendLabel', null);
                 }
 
                 const uindex = this.dialogConfig.itemInfo.findIndex(item => item.code === 'sendUsers');
@@ -379,6 +426,8 @@ export default {
                     if (uindex < 0) itemInfo.push(sendUsers);
                 } else if (uindex > -1) {
                     itemInfo.splice(uindex, 1);
+                    this.$set(currentForm, 'sendUsers', null);
+                    this.$set(currentForm, 'sendUsersName', null);
                 }
 
                 this.dialogConfig.itemInfo = itemInfo;

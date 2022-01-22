@@ -257,17 +257,49 @@ export default {
                     {
                         label: '对应标签',
                         code: 'label',
-                        type: 'select',
-                        options: [],
-                        optionProps: {
-                            key: 'dicKey',
-                            value: 'dicValue',
+                        showCode: 'labelName',
+                        type: 'table',
+                        dataType: 'array',
+                        tableConfig: {
+                            multiple: true,
+                            rowSize: 2,
+                            pageParamKeys: {
+                                pageIndex: 'page',
+                                pageSize: 'limit',
+                            },
+                            query: [
+                                {
+                                    label: '标签名称',
+                                    code: 'labelName',
+                                    type: 'text',
+                                },
+                            ],
+                            field: [
+                                {
+                                    label: '标签名称',
+                                    code: 'labelName',
+                                },
+                            ],
                         },
+                        trans: [
+                            {
+                                from: 'id',
+                                to: 'label',
+                            },
+                            {
+                                from: 'labelName',
+                                to: 'labelName',
+                            },
+                        ],
                         requestConfig: {
-                            url: '/dict/select/list/USER_LABEL',
-                            method: 'get',
+                            url: '/label/queryPage',
+                            method: 'post',
                             params: {},
-                            callback: res => (res.data || {}).list || [],
+                            pageParamKeys: {
+                                pageIndex: 'page',
+                                pageSize: 'limit',
+                            },
+                            callback: res => ((res && res.data || {}).page || {}).list || [],
                         },
                         required: true,
                     },

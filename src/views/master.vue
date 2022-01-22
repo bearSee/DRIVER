@@ -57,6 +57,10 @@ export default {
                             path: '/vip-manage',
                         },
                         {
+                            name: '标签管理',
+                            path: '/label-manage',
+                        },
+                        {
                             name: '消息管理',
                             path: '/message-manage',
                         },
