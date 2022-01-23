@@ -1,5 +1,4 @@
 
-
 <template>
   <div class="message-manage">
     <sib-table
@@ -88,6 +87,8 @@
 </template>
 
 <script>
+/* eslint-disable no-nested-ternary */
+
 const sendLabel = {
     label: '发送会员标签',
     code: 'sendLabel',
@@ -419,6 +420,7 @@ export default {
                 } else if (lindex > -1) {
                     itemInfo.splice(lindex, 1);
                     this.$set(currentForm, 'sendLabel', null);
+                    this.$set(currentForm, 'sendLabelName', null);
                 }
 
                 const uindex = this.dialogConfig.itemInfo.findIndex(item => item.code === 'sendUsers');
@@ -444,9 +446,9 @@ export default {
                 cb();
                 return;
             }
-            if (form.sendUsersName && typeof form.sendUsersName === 'string') {
-                form.sendUsersName = form.sendUsersName.split(',');
-            }
+            const { sendLabelName, sendUsersName } = form;
+            form.sendLabelName = sendLabelName ? (typeof sendLabelName === 'string' ? sendLabelName.split(',') : sendLabelName) : null;
+            form.sendUsersName = sendUsersName ? (typeof sendUsersName === 'string' ? sendUsersName.split(',') : sendUsersName) : null;
             const { type } = this.dialogConfig;
             const url = `/message/${type}`;
 
