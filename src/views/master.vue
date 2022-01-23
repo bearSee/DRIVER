@@ -57,13 +57,17 @@ export default {
                             path: '/vip-manage',
                         },
                         {
+                            name: '标签管理',
+                            path: '/label-manage',
+                        },
+                        {
                             name: '消息管理',
                             path: '/message-manage',
                         },
                     ],
                 },
                 {
-                    name: '车友活动',
+                    name: '积分活动',
                     icon: 'el-icon-menu',
                     children: [
                         {

@@ -1,6 +1,7 @@
 import notFound from '@/views/404';
 import master from '@/views/master';
 import vipManage from '@/views/vipManage/vip-manage';
+import labelManage from '@/views/vipManage/label-manage';
 import messageManage from '@/views/vipManage/message-manage';
 import activeManage from '@/views/ridersActivity/active-manage';
 import goodsManage from '@/views/pointMall/goods-manage';
@@ -37,6 +38,14 @@ export default {
                         keepAlive: false,
                     },
                     component: vipManage,
+                },
+                {
+                    path: '/label-manage',
+                    name: 'labelManage',
+                    meta: {
+                        keepAlive: false,
+                    },
+                    component: labelManage,
                 },
                 {
                     path: '/message-manage',

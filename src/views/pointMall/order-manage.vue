@@ -174,7 +174,7 @@ export default {
                     type: 'label',
                 },
                 {
-                    label: '商品价格',
+                    label: '兑换所需积分',
                     code: 'productPrice',
                     type: 'label',
                 },

@@ -26,7 +26,8 @@
             for="upload-cover">{{ imgSRC ? '重新上传' : '上传图片' }}</label>
         </div>
         <div class="info-tips">
-          <p>建议图片大小不超过3M</p>
+          <p>图片大小不超过3M</p>
+          <p>建议尺寸为320*350</p>
           <p>支持jpg、jpeg、png格式的图片</p>
         </div>
       </div>
@@ -152,17 +153,22 @@ export default {
         }
         .operate-box {
             margin-left: 30px;
-            width: 270px;
+            // width: 270px;
+            width: 220px;
             display: inline-block;
             vertical-align: top;
             .cropper-preview-box {
-                width: 270px;
-                height: 150px;
+                // width: 270px;
+                // height: 150px;
+                width: 220px;
+                height: 240px;
                 overflow: hidden;
                 display: flex;
                 #cropper-preview {
-                    width: 270px;
-                    height: 150px;
+                    // width: 270px;
+                    // height: 150px;
+                    width: 220px;
+                    height: 240px;
                     overflow: hidden;
                     display: inline-block;
                     margin: auto;
@@ -186,13 +192,14 @@ export default {
                 }
             }
             .info-tips {
-                margin-top: 36px;
+                // margin-top: 36px;
+                margin-top: 10px;
                 text-align: center;
-                font-size: 14px;
+                font-size: 12px;
                 font-family: PingFangSC-Regular, PingFang SC;
                 font-weight: 400;
                 color: #888888;
-                line-height: 1.5;
+                line-height: 20px;
             }
         }
     }

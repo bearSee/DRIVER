@@ -185,7 +185,7 @@
     </el-dialog>
     <el-dialog
       class="center"
-      width="720px"
+      width="670px"
       title="图片上传"
       append-to-body
       lock-scroll
@@ -464,7 +464,7 @@ export default {
                     maxlength: 500,
                 },
                 {
-                    label: '商品价格',
+                    label: '兑换所需积分',
                     code: 'price',
                     type: 'number',
                 },

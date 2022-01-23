@@ -257,17 +257,49 @@ export default {
                     {
                         label: '对应标签',
                         code: 'label',
-                        type: 'select',
-                        options: [],
-                        optionProps: {
-                            key: 'dicKey',
-                            value: 'dicValue',
+                        showCode: 'labelName',
+                        type: 'table',
+                        dataType: 'array',
+                        tableConfig: {
+                            multiple: true,
+                            rowSize: 2,
+                            pageParamKeys: {
+                                pageIndex: 'page',
+                                pageSize: 'limit',
+                            },
+                            query: [
+                                {
+                                    label: '标签名称',
+                                    code: 'labelName',
+                                    type: 'text',
+                                },
+                            ],
+                            field: [
+                                {
+                                    label: '标签名称',
+                                    code: 'labelName',
+                                },
+                            ],
                         },
+                        trans: [
+                            {
+                                from: 'id',
+                                to: 'label',
+                            },
+                            {
+                                from: 'labelName',
+                                to: 'labelName',
+                            },
+                        ],
                         requestConfig: {
-                            url: '/dict/select/list/USER_LABEL',
-                            method: 'get',
+                            url: '/label/queryPage',
+                            method: 'post',
                             params: {},
-                            callback: res => (res.data || {}).list || [],
+                            pageParamKeys: {
+                                pageIndex: 'page',
+                                pageSize: 'limit',
+                            },
+                            callback: res => ((res && res.data || {}).page || {}).list || [],
                         },
                         required: true,
                     },
@@ -314,7 +346,7 @@ export default {
                 },
                 {
                     label: '对应标签',
-                    code: 'label',
+                    code: 'labelName',
                     type: 'label',
                 },
             ],
@@ -420,7 +452,11 @@ export default {
             this.dialogConfig.title = '编辑';
             this.dialogConfig.type = 'update';
             this.dialogConfig.itemInfo = editItemInfo && editItemInfo.length ? editItemInfo : (addItemInfo || []);
-            this.dialogConfig.form = JSON.parse(JSON.stringify(row));
+            this.dialogConfig.form = JSON.parse(JSON.stringify({
+                ...row,
+                label: (row.userLabelDtos || []).map(({ labelId }) => labelId),
+                labelName: (row.userLabelDtos || []).map(({ labelName }) => labelName).join(),
+            }));
             this.dialogConfig.visible = true;
         },
         // 创建、编辑用户提交
@@ -428,14 +464,14 @@ export default {
             const { type } = this.dialogConfig;
             const url = `/user/${type}`;
 
-            this.$http.post(url, form).then(() => {
+            this.$http.post(url, { ...form, userLabelDtos: form.label.map((labelId, i) => ({ labelId, labelName: form.labelName[i] })) }).then(() => {
                 this.$message.success('保存成功');
                 this.dialogConfig.visible = false;
                 if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
             }).finally(cb);
         },
         handlerManagePoints(row) {
-            this.baseForm = row;
+            this.baseForm = { ...row, labelName: (row.userLabelDtos || []).map(({ labelName }) => labelName).join('、') };
             this.pointVisible = true;
         },
         formItemChange(val, { code }) {
