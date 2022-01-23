@@ -27,6 +27,7 @@ Axios.interceptors.request.use(
         config.headers = {
             ...config.headers,
             Authorization: window.localStorage.getItem('Authorization') || '',
+            'i-token': Vue.prototype.$cookies.get('scheduling-i-token') || '',
         };
         // get请求增加时间戳，避免服务器304
         if (config.method === 'get') {

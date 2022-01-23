@@ -14,7 +14,7 @@
             <div class="drop-content-box">
               <el-avatar icon="el-icon-user-solid" />
               <p class="userName">
-                {{ username || '' }}
+                {{ (userInfo || {}).name || '' }}
               </p>
               <i class="el-icon-caret-bottom" />
             </div>
@@ -91,7 +91,7 @@ export default {
                     ],
                 },
             ],
-            username: window.localStorage.getItem('username'),
+            userInfo: window.localStorage.getItem('userInfo'),
         };
     },
     methods: {

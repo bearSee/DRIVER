@@ -2,7 +2,7 @@
  * @Author: 熊望
  * @Date: 2022-01-07 23:07:13
  * @LastEditors: 熊望
- * @LastEditTime: 2022-01-09 18:53:28
+ * @LastEditTime: 2022-01-23 23:31:58
  * @FilePath: /nginx/Users/bear/projects/project-bear/DRIVER/src/store/index.js
  * @Description:
  */
@@ -16,23 +16,33 @@ const debug = process.env.NODE_ENV !== 'production';
 const store = new Vuex.Store({
     state: {
         // 需要缓存的数据
-        keepAliveKeys: ['userInfo'],
-        // 用户信息
-        userInfo: {},
+        keepAliveKeys: [],
+        logined: false,
     },
     mutations: {
-        setUserInfo(state, payload) {
-            state.userInfo = { ...state.userInfo, ...payload };
-        },
-        replaceUserInfo(state, payload) {
-            state.userInfo = payload || {};
+        setLoginStatus(state, payload) {
+            state.logined = payload;
         },
         clearPermissions(state, saveStorage) {
-            state.userInfo = {};
+            state.logined = false;
+            Vue.prototype.$cookies.remove('scheduling-i-token');
             if (!saveStorage) window.localStorage.clear();
         },
     },
     actions: {
+        handlerLogin({ commit }, payload) {
+            return new Promise((resolve) => {
+                Vue.prototype.$http.post('/init/login', payload || {}, { loading: true }).then((res) => {
+                    window.localStorage.setItem('Authorization', (res && res.data || {}).Authorization);
+                    window.localStorage.setItem('userInfo', (res && res.data || {}).user);
+                    commit('setLoginStatus', true);
+                    resolve(true);
+                }).catch(() => {
+                    resolve(false);
+                    commit('clearPermissions');
+                });
+            });
+        },
     },
     strict: debug,
 });

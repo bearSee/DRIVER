@@ -64,7 +64,7 @@
   </div>
 </template>
 <script>
-import { mapMutations } from 'vuex';
+import { mapMutations, mapActions } from 'vuex';
 // import { encryptAES } from 'sibionics-ui/src/utils/encryption';
 
 export default {
@@ -104,20 +104,14 @@ export default {
         };
     },
     methods: {
-        ...mapMutations(['clearPermissions', 'setUserInfo']),
+        ...mapMutations(['clearPermissions']),
+        ...mapActions(['handlerLogin']),
         handlerSubmit() {
-            this.$refs.loginForm.validate((valid) => {
+            this.$refs.loginForm.validate(async (valid) => {
                 if (valid) {
                     this.clearPermissions(true);
-                    // AES加密后的密码
-                    const { username, password } = this.formData;
-                    // const encryptPwd = encryptAES(password);
-                    this.$http.post('/init/login', this.$qs.stringify({ username, password }), { loading: true }).then((res) => {
-                        // 存储Token
-                        window.localStorage.setItem('Authorization', (res && res.data || {}).Authorization);
-                        window.localStorage.setItem('username', username);
-                        this.$router.push('/master').catch(() => {});
-                    });
+                    const loginStatus = await this.handlerLogin(this.formData);
+                    if (loginStatus) this.$router.push('/master').catch(() => {});
                 }
             });
         },
