@@ -135,6 +135,7 @@ const sendLabel = {
             pageSize: 'limit',
         },
         callback: res => ((res && res.data || {}).page || {}).list || [],
+        stringify: true,
     },
     required: true,
 };
@@ -213,6 +214,7 @@ const sendUsers = {
             pageSize: 'limit',
         },
         callback: res => ((res && res.data || {}).page || {}).list || [],
+        stringify: true,
     },
     required: true,
 };

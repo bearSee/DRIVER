@@ -34,7 +34,7 @@ const store = new Vuex.Store({
             return new Promise((resolve) => {
                 Vue.prototype.$http.post('/init/login', payload || {}, { loading: true }).then((res) => {
                     window.localStorage.setItem('Authorization', (res && res.data || {}).Authorization);
-                    window.localStorage.setItem('userInfo', (res && res.data || {}).user);
+                    window.localStorage.setItem('userInfo', JSON.stringify((res && res.data || {}).user));
                     commit('setLoginStatus', true);
                     resolve(true);
                 }).catch(() => {

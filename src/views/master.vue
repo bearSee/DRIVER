@@ -91,7 +91,7 @@ export default {
                     ],
                 },
             ],
-            userInfo: window.localStorage.getItem('userInfo'),
+            userInfo: JSON.parse(window.localStorage.getItem('userInfo') || '{}'),
         };
     },
     methods: {
