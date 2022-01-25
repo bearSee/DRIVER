@@ -7,6 +7,7 @@ import errorCode from '@/utils/error-code';
 
 let loading = null;
 let messageBox = null;
+let showMessageToast = true;
 
 const host = `${window.location.protocol}//szift.szft.net.cn/driver-home-admin/`;
 const baseURL = host;
@@ -45,6 +46,7 @@ Axios.interceptors.request.use(
                 background: 'rgba(0, 0, 0, 0.7)',
             });
         }
+        showMessageToast = config.showToast !== false;
 
         return config;
     },
@@ -87,7 +89,7 @@ Axios.interceptors.response.use(
         // 返回成功响应
         if (String(code) === '0') return res;
 
-        showMessage();
+        if (showMessageToast) showMessage();
 
         // 登录失效拦截
         if (['10000'].includes(String(code))) {

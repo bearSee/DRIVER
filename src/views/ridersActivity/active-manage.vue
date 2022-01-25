@@ -164,6 +164,7 @@ export default {
                     label: '操作',
                     code: 'operate',
                     type: 'slot',
+                    width: 120,
                 },
             ],
             requestConfig: {
@@ -225,6 +226,7 @@ export default {
             this.$http.post('/activitySet/list').then((res) => {
                 const { scoreMaxPerson, scoreMaxCompany } = (res && res.data && res.data.data || [])[0] || {};
                 this.settingForm = {
+                    ...(res && res.data && res.data.data || [])[0] || {},
                     scoreMaxPerson: String(scoreMaxPerson || 0),
                     scoreMaxCompany: String(scoreMaxCompany || 0),
                 };

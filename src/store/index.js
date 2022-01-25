@@ -32,7 +32,7 @@ const store = new Vuex.Store({
     actions: {
         handlerLogin({ commit }, payload) {
             return new Promise((resolve) => {
-                Vue.prototype.$http.post('/init/login', payload || {}, { loading: true }).then((res) => {
+                Vue.prototype.$http.post('/init/login', payload || {}, { loading: true, showToast: !!payload }).then((res) => {
                     window.localStorage.setItem('Authorization', (res && res.data || {}).Authorization);
                     window.localStorage.setItem('userInfo', JSON.stringify((res && res.data || {}).user));
                     commit('setLoginStatus', true);
