@@ -289,6 +289,7 @@ export default {
                     label: '操作',
                     code: 'operate',
                     type: 'slot',
+                    width: 150,
                 },
             ],
             requestConfig: {

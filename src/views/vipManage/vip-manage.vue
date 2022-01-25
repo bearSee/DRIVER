@@ -213,7 +213,7 @@ export default {
                 url: '/user/queryPage',
                 method: 'post',
                 params: {},
-                callback: res => ((res.data || {}).page || {}).list || [],
+                callback: res => (((res.data || {}).page || {}).list || []).map(d => ({ ...d, labelName: (d.userLabelDtos || []).map(({ labelName }) => labelName).join() })),
                 stringify: true,
             },
             dialogConfig: {
@@ -455,7 +455,6 @@ export default {
             this.dialogConfig.form = JSON.parse(JSON.stringify({
                 ...row,
                 label: (row.userLabelDtos || []).map(({ labelId }) => labelId),
-                labelName: (row.userLabelDtos || []).map(({ labelName }) => labelName).join(),
             }));
             this.dialogConfig.visible = true;
         },
@@ -471,7 +470,7 @@ export default {
             }).finally(cb);
         },
         handlerManagePoints(row) {
-            this.baseForm = { ...row, labelName: (row.userLabelDtos || []).map(({ labelName }) => labelName).join('、') };
+            this.baseForm = row;
             this.pointVisible = true;
         },
         formItemChange(val, { code }) {
