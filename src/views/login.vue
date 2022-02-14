@@ -34,7 +34,38 @@
               :label="item.label"
               :prop="item.code"
               :key="item.code">
+              <template v-if="item.code === 'verifyCode'">
+                <el-input
+                  v-model="formData[item.code]"
+                  :placeholder="`请输入${item.label}`"
+                  :maxlength="item.maxlength"
+                  :type="item.type"
+                  @keyup.enter.native="handlerSubmit"
+                  clearable
+                />
+                <div class="verifyCode-image">
+                  <img
+                    v-if="captchaVisible"
+                    :src="captchaUrl"
+                    alt="验证码"
+                    srcset="">
+                </div>
+                <!-- <captcha-code
+                  ref="captcha"
+                  bg-color="#f8f8f8"
+                  class="captcha-code"
+                  :captcha="verifyCode"
+                  :font-size="28"
+                  :char-num="4" /> -->
+                <el-button
+                  type="text"
+                  class="captcha-text"
+                  @click="handleRefreshCaptcha">
+                  点击刷新
+                </el-button>
+              </template>
               <el-input
+                v-else
                 clearable
                 v-model="formData[item.code]"
                 :show-password="item.code === 'password'"
@@ -65,12 +96,28 @@
 </template>
 <script>
 import { mapMutations, mapActions } from 'vuex';
-// import { encryptAES } from 'sibionics-ui/src/utils/encryption';
+import { encryptAES } from 'sibionics-ui/src/utils/encryption';
+// import captchaCode from '@/components/captcha';
 
 export default {
     name: 'Login',
+    // components: { captchaCode },
     data() {
+        const pwdValidator = (rule, value, callback) => {
+            if (!value) {
+                callback(new Error('请输入密码'));
+                return;
+            }
+            // if (value.length < 9 || !/[a-z]/.test(value) || !/[A-Z]/.test(value) || !/[0-9]/.test(value) || !/\W/.test(value)) {
+            //     callback(new Error('密码长度大于8位，并包含大小写字母、数字及特殊符号'));
+            //     return;
+            // }
+            callback();
+        };
         return {
+            // verifyCode: '',
+            captchaUrl: `${this.$baseURL}init/verifyCode?_t=${new Date().getTime()}`,
+            captchaVisible: true,
             loadingBox: (text = '') => this.$loading({
                 lock: true,
                 text,
@@ -89,6 +136,12 @@ export default {
                     type: 'password',
                     maxlength: 30,
                 },
+                {
+                    label: '验证码',
+                    code: 'verifyCode',
+                    type: 'text',
+                    maxlength: 6,
+                },
             ],
             formData: {},
             rules: {
@@ -96,9 +149,10 @@ export default {
                     { required: true, message: '请输入账号', trigger: 'blur' },
                 ],
                 password: [
-                    {
-                        required: true, message: '请输入密码', trigger: 'blur',
-                    },
+                    { validator: pwdValidator, trigger: ['blur', 'change'] },
+                ],
+                verifyCode: [
+                    { required: true, message: '请输入验证码', trigger: 'blur' },
                 ],
             },
         };
@@ -110,9 +164,18 @@ export default {
             this.$refs.loginForm.validate(async (valid) => {
                 if (valid) {
                     this.clearPermissions(true);
-                    const loginStatus = await this.handlerLogin(this.formData);
+                    const loginStatus = await this.handlerLogin({ ...this.formData, password: encryptAES(this.formData.password, 'DRIVER@HOME@2022') });
+                    this.handleRefreshCaptcha();
                     if (loginStatus) this.$router.push('/master').catch(() => {});
                 }
+            });
+        },
+        handleRefreshCaptcha() {
+            // if (this.$refs.captcha && this.$refs.captcha[0]) this.$refs.captcha[0].refreshCaptcha();
+            this.captchaVisible = false;
+            this.$nextTick(() => {
+                this.captchaUrl = `${this.$baseURL}init/verifyCode?_t=${new Date().getTime()}`;
+                this.captchaVisible = true;
             });
         },
     },
@@ -180,7 +243,7 @@ export default {
                     width: 100px;
                 }
                 .login-center-head {
-                    margin-bottom: calc(70 * 80vw / 1490);
+                    margin-bottom: calc(20 * 80vw / 1490);
                     .text-h3 {
                         img {
                             width: 100%;
@@ -210,7 +273,7 @@ export default {
                         }
                     }
                     &.form-item-btn {
-                        margin-top: calc(40 * 80vw / 1490);
+                        margin-top: calc(20 * 80vw / 1490);
                         .login-sign-in {
                             width: calc(244 * 80vw / 1490);
                             height: calc(70 * 80vw / 1490);
@@ -224,7 +287,7 @@ export default {
                             font-size: 25px;
                         }
                     }
-                    &.login-center-verification {
+                    &.login-center-verifyCode {
                          .el-form-item__content {
                             display: flex;
                             .el-input {
@@ -237,9 +300,27 @@ export default {
                             }
                         }
                     }
+                    .verifyCode-image {
+                        min-width: 100px;
+                        max-width: 100px;
+                        margin: 0 5px;
+                        img {
+                            height: 100%;
+                            width: 100px;
+                            display: block;
+                        }
+                    }
                 }
             }
         }
+    }
+}
+@media (max-width: 1600px){
+    .login-center-head {
+        margin-bottom: calc(70 * 80vw / 1490)!important;
+    }
+    .form-item-btn {
+        margin-top: calc(40 * 80vw / 1490);
     }
 }
 </style>

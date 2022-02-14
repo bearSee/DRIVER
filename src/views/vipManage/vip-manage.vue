@@ -201,6 +201,7 @@ export default {
                 {
                     label: '对应标签',
                     code: 'labelName',
+                    formatter: ({ userLabelDtos }) => (userLabelDtos || []).map(({ labelName }) => labelName).join(),
                 },
                 {
                     label: '操作',
@@ -245,7 +246,7 @@ export default {
                         label: '公司/平台',
                         code: 'company',
                         type: 'text',
-                        required: true,
+                        // required: true,
                     },
                     {
                         label: '邀请码',
