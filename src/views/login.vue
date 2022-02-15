@@ -96,7 +96,8 @@
 </template>
 <script>
 import { mapMutations, mapActions } from 'vuex';
-import { encryptAES } from 'sibionics-ui/src/utils/encryption';
+// eslint-disable-next-line no-unused-vars
+import { encryptAES, decryptAES } from '@/utils/encryption';
 // import captchaCode from '@/components/captcha';
 
 export default {
@@ -164,7 +165,7 @@ export default {
             this.$refs.loginForm.validate(async (valid) => {
                 if (valid) {
                     this.clearPermissions(true);
-                    const loginStatus = await this.handlerLogin({ ...this.formData, password: encryptAES(this.formData.password, 'DRIVER@HOME@2022') });
+                    const loginStatus = await this.handlerLogin({ ...this.formData, password: encryptAES(this.formData.password) });
                     this.handleRefreshCaptcha();
                     if (loginStatus) this.$router.push('/master').catch(() => {});
                 }

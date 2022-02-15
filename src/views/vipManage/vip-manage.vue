@@ -20,6 +20,21 @@
         </el-button> -->
         <el-button
           type="primary"
+          v-loading="isLoaind"
+          @click.native="handlerDownload">
+          下载模板
+        </el-button>
+        <el-upload v-bind="fileConfig">
+          <el-button
+            size="small"
+            type="primary"
+            v-loading="isLoaind">
+            导 入
+          </el-button>
+        </el-upload>
+        <el-button
+          type="primary"
+          v-loading="isLoaind"
           @click.native="handlerExport">
           导 出
         </el-button>
@@ -131,11 +146,13 @@
 </template>
 
 <script>
+import { mapMutations } from 'vuex';
 
 export default {
     name: 'VipManage',
     data() {
         return {
+            isLoaind: false,
             pageParamKeys: {
                 pageIndex: 'page',
                 pageSize: 'limit',
@@ -424,9 +441,38 @@ export default {
                 callback: res => ((res.data || {}).page || {}).list || [],
                 stringify: true,
             },
+            fileConfig: {
+                class: 'form-head_upload-file',
+                ref: 'fileUpload',
+                action: `${this.$http.defaults.baseURL}/user/importExcel`,
+                headers: {
+                    Authorization: window.localStorage.getItem('Authorization') || '',
+                    'i-token': this.$cookies.get('scheduling-i-token') || '',
+                },
+                name: 'file',
+                multiple: false,
+                showFileList: false,
+                limit: 1,
+                accept: '',
+                onSuccess: ({ code, msg }) => {
+                    if (String(code) === '0') {
+                        this.$message.success('上传成功');
+                        if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
+                        return;
+                    }
+                    this.$message.success(msg || '上传失败，请稍后重试');
+                    // 登录失效拦截
+                    if (['10000'].includes(String(code))) {
+                        // 清除相关菜单权限
+                        this.clearPermissions();
+                        this.$router.push('/login');
+                    }
+                },
+            },
         };
     },
     methods: {
+        ...mapMutations(['clearPermissions']),
         // 删除
         handlerDelete(row) {
             this.$confirm('确定删除吗？', '温馨提示', {
@@ -512,11 +558,16 @@ export default {
                 if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
             }).finally(cb);
         },
+        handlerDownload() {
+            window.download(`${this.$http.defaults.baseURL}/user/downloadTpl`, '模板.xlsx');
+        },
         handlerExport() {
+            this.isLoaind = true;
             this.$http.post('/user/exportExcel', this.$qs.stringify(this.$refs.sibTable.searchParams), { responseType: 'blob' }).then((res) => {
                 window.download(res, '会员信息.xlsx');
-                console.log('res', res);
                 this.$message.success('导出成功');
+            }).finally(() => {
+                this.isLoaind = false;
             });
         },
     },
@@ -527,7 +578,10 @@ export default {
 // @import "@/assets/scss/theme.scss";
 
 .vip-manage {
-
+    .form-head_upload-file {
+        display: inline-block;
+        margin: 0 10px;
+    }
 }
 .point-dialog {
     .el-dialog__body {
