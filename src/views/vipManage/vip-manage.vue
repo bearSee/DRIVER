@@ -559,7 +559,13 @@ export default {
             }).finally(cb);
         },
         handlerDownload() {
-            window.download(`${this.$http.defaults.baseURL}/user/downloadTpl`, '模板.xlsx');
+            this.isLoaind = true;
+            this.$http.get('/user/downloadTpl', { responseType: 'blob' }).then((res) => {
+                window.download(res, '模板.xlsx');
+                this.$message.success('模板下载成功');
+            }).finally(() => {
+                this.isLoaind = false;
+            });
         },
         handlerExport() {
             this.isLoaind = true;
