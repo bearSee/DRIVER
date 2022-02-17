@@ -455,18 +455,22 @@ export default {
                 limit: 1,
                 accept: '',
                 onSuccess: ({ code, msg }) => {
+                    this.$refs.fileUpload.clearFiles();
                     if (String(code) === '0') {
                         this.$message.success('上传成功');
                         if (this.$refs.sibTable) this.$refs.sibTable.getTableData();
                         return;
                     }
-                    this.$message.success(msg || '上传失败，请稍后重试');
+                    this.$message.error(msg || '上传失败，请稍后重试');
                     // 登录失效拦截
                     if (['10000'].includes(String(code))) {
                         // 清除相关菜单权限
                         this.clearPermissions();
                         this.$router.push('/login');
                     }
+                },
+                onError: () => {
+                    this.$refs.fileUpload.clearFiles();
                 },
             },
         };

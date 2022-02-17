@@ -165,7 +165,12 @@ export default {
             this.$refs.loginForm.validate(async (valid) => {
                 if (valid) {
                     this.clearPermissions(true);
-                    const loginStatus = await this.handlerLogin({ ...this.formData, password: encryptAES(this.formData.password) });
+                    const loginStatus = await this.handlerLogin({
+                        ...this.formData,
+                        password: encryptAES(this.formData.password),
+                        // eslint-disable-next-line no-underscore-dangle
+                        _t: this.$qs.parse(this.captchaUrl.split('?')[1])._t,
+                    });
                     this.handleRefreshCaptcha();
                     if (loginStatus) this.$router.push('/master').catch(() => {});
                 }
