@@ -232,6 +232,7 @@ export default {
                 method: 'post',
                 params: {},
                 callback: res => (((res.data || {}).page || {}).list || []).map(d => ({ ...d, labelName: (d.userLabelDtos || []).map(({ labelName }) => labelName).join() })),
+                totalCallback: res => ((res.data || {}).page || {}).totalCount || 0,
                 stringify: true,
             },
             dialogConfig: {
@@ -439,6 +440,7 @@ export default {
                 method: 'post',
                 params: {},
                 callback: res => ((res.data || {}).page || {}).list || [],
+                totalCallback: res => ((res.data || {}).page || {}).totalCount || 0,
                 stringify: true,
             },
             fileConfig: {

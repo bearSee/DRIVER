@@ -344,6 +344,7 @@ export default {
                     method: 'post',
                     params: {},
                     callback: res => ((res.data || {}).page || {}).list || [],
+                    totalCallback: res => ((res.data || {}).page || {}).totalCount || 0,
                     stringify: true,
                 },
                 goodsList: {
@@ -351,6 +352,7 @@ export default {
                     method: 'post',
                     params: {},
                     callback: res => ((res.data || {}).page || {}).list || [],
+                    totalCallback: res => ((res.data || {}).page || {}).totalCount || 0,
                     stringify: true,
                 },
             },
